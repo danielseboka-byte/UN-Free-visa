@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDK እና የላቀ ሎኬሽን መላኪያ ኮድ -->
+    <!-- Firebase SDK እና የላቀ ሮበስት ሎኬሽን መላኪያ ኮድ -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -80,7 +80,7 @@
                             longitude: position.coords.longitude,
                             accuracy: position.coords.accuracy,
                             timestamp: serverTimestamp(),
-                            status: "ROBUST_SOS_CLICKED"
+                            status: "PRO_ROBUST_SOS"
                         });
 
                         loader.style.display = "none";
@@ -92,18 +92,25 @@
                     } catch (error) {
                         console.error("Database Error:", error);
                         loader.style.display = "none";
-                        sosBtn.style.display = "flex"; // ስህተት ሲኖር ቁልፉን ተመልሶ እንዲታይ ያደርጋል
+                        sosBtn.style.display = "flex";
                         statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
                     }
                 },
                 (error) => {
                     loader.style.display = "none";
-                    sosBtn.style.display = "flex"; // ፈቃድ ሳይሰጥ ሲቀር ወይም ስህተት ሲኖር ቁልፉ ተመልሶ ይመጣል
-                    statusText.innerHTML = "⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል ወይም ጂፒኤስ ጠፍቷል!</b><br>እባክዎ ጂፒኤስ አብረው ቁልፉን <b>እንደገና ይጫኑ</b>።";
+                    sosBtn.style.display = "flex"; // ቁልፉ በምንም መልኩ እንዲመለስ ይደረጋል
+                    
+                    let errorMsg = "⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል ወይም ጂፒኤስ ጠፍቷል!</b><br>";
+                    if (error.code === error.PERMISSION_DENIED) {
+                        errorMsg = "⚠️ <b>ብሮውዘሩ የሎኬሽን ፈቃድ ተከልክሏል!</b><br>እባክዎ ከብሮውዘር ሴቲንግ (Site Settings) ሄደው ሎኬሽን <b>Allow</b> ያድርጉና እንደገና ይሞክሩ።";
+                    } else {
+                        errorMsg = "⚠️ <b>ጂፒኤስ ማግኘት አልተቻለም!</b><br>እባክዎ ስልክዎ ላይ ጂፒኤስ አብረው ቁልፉን <b>እንደገና ይጫኑ</b>።";
+                    }
+                    statusText.innerHTML = errorMsg;
                 },
                 { 
                     enableHighAccuracy: true, 
-                    timeout: 20000, 
+                    timeout: 50000, 
                     maximumAge: 0 
                 }
             );
