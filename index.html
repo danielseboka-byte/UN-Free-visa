@@ -15,18 +15,18 @@
         
         <h1 class="text-2xl font-bold mb-2 text-red-400">አስቸኳይ እርዳታ ማግኛ</h1>
         <p id="status-text" class="text-slate-300 text-sm mb-8 leading-relaxed">
-            በጫካ ውስጥ አደጋ ሲገጥምዎ ከታች ያለውን ቁልፍ በአንድ ጊዜ በመጫን ሎኬሽንዎን ለአድሚን በሰከንዶች ውስጥ ያጋሩ።
+            በጫካ ውስጥ አደጋ ሲገጥምዎ ከታች ያለውን ቁልፍ በመጫን ሎኬሽንዎን ለአድሚን ወዲያውኑ ያጋሩ።
         </p>
 
-        <!-- ሰራተኛው የሚጫነው ብቸኛ ግዙፍ ቁልፍ -->
-        <button id="sos-btn" onclick="sendLocation()" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all text-white font-bold py-4 px-6 rounded-2xl shadow-lg text-lg flex items-center justify-center gap-2 mb-4">
+        <!-- ሰራተኛው የሚጫነው ግዙፍ ቁልፍ -->
+        <button id="sos-btn" onclick="sendLocation()" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all text-white font-bold py-4 px-6 rounded-2xl shadow-lg text-lg flex items-center justify-center gap-2 mb-4 cursor-pointer">
             📍 ሎኬሽን ለአድሚን ላክ
         </button>
 
         <!-- ሎደር -->
         <div id="loader" class="hidden justify-center items-center mb-4">
             <div class="animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent"></div>
-            <span class="ml-3 text-slate-300 text-sm">ሎኬሽን በጂፒኤስ በመፈለግ ላይ...</span>
+            <span class="ml-3 text-slate-300 text-sm">ጂፒኤስ ሎኬሽን በመፈለግ ላይ...</span>
         </div>
 
         <!-- ስኬታማ መልዕክት -->
@@ -35,10 +35,11 @@
         </div>
     </div>
 
-    <!-- Firebase SDK እና ሎኬሽን መላኪያ ኮድ -->
+    <!-- Firebase SDK እና የላቀ ሎኬሽን መላኪያ ኮድ -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";        
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
         // የርስዎን ትክክለኛ የፋየርቤዝ ማዋቀሪያ (Firebase Config) እዚህ ያስገቡ
         const firebaseConfig = {
             apiKey: "AIzaSyBwcN00uIfwAhwAs3gUtYXWtISNeUjQ_m0",
