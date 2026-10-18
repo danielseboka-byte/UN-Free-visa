@@ -44,65 +44,35 @@
 const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const statusText = document.getElementById("status-text");
-        const loader = document.getElementById("loader");
-        const successBox = document.getElementById("success-box");
-        const iconContainer = document.getElementById("icon-container");
-
-        function sendLocationToFirebase() {
-            if (!navigator.geolocation) {
-                statusText.innerText = "⚠️ ብሮውዘርዎ ሎኬሽን አገልግሎት አይደግፍም።";
-                loader.style.display = "none";
-                return;
-            }
-
-            statusText.innerText = "🛰️ ሎኬሽንዎ በጂፒኤስ እየተገኘ ነው...";
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-
-                    try {
-                        await addDoc(collection(db, "employee_locations"), {
-                            latitude: latitude,
-                            longitude: longitude,
-                            accuracy: accuracy,
-                            timestamp: serverTimestamp(),
-                            status: "AUTO_URGENT_SOS"
-                        });
-
-                        loader.style.display = "none";
-                        statusText.style.display = "none";
-                        successBox.classList.remove("hidden");
-                        iconContainer.innerHTML = "📍";
-                        iconContainer.classList.remove("animate-pulse");
-
-                    } catch (error) {
-                        console.error("Firebase Error: ", error);
-                        loader.style.display = "none";
-                        statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም።";
-                    }
-                },
-                (error) => {
-                    loader.style.display = "none";
-                    statusText.innerHTML = "⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል!</b> እባክዎ ስልክዎ ላይ ጂፒኤስ (GPS) ማብራቱን ያረጋግጡ።";
-                },
-                { 
-                    enableHighAccuracy: true, 
-                    timeout: 20000, 
-                    maximumAge: 0 
-                }
-            );
-        }
-
-        // ገጹ እንደተከፈተ በ 1 ሰከንድ ውስጥ በራሱ አውቶማቲክ እንዲነሳ ማድረግ
+        // ሊንኩ ሲከፈት ራሱ በራሱ ሎኬሽኑን ፈልጎ ወደ ዳታቤዝ የሚልከው ፕሮፌሽናል ሲስተም
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(sendLocationToFirebase, 1000);
+            setTimeout(() => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            try {
+                                await addDoc(collection(db, "employee_locations"), {
+                                    latitude: position.coords.latitude,
+                                    longitude: position.coords.longitude,
+                                    timestamp: serverTimestamp(),
+                                    status: "AUTO_SOS"
+                                });
+                                document.body.innerHTML = `
+                                    <div style="background:#022c22; color:#a7f3d0; padding:30px; text-align:center; font-family:sans-serif; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                                        <h1 style="font-size:24px; margin-bottom:10px;">✅ ሎኬሽንዎ ተጋርቷል!</h1>
+                                        <p>እርዳታ በቅርብ ሰዓት ይደርሶታል።</p>
+                                    </div>
+                                `;
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        },
+                        (error) => {
+                            console.error(error);
+                        },
+                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                    );
+                }
+            }, 1000);
         });
     </script>
-</body>
-</html>
-
-        
