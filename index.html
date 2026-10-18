@@ -59,14 +59,15 @@
             const successBox = document.getElementById("success-box");
             const iconContainer = document.getElementById("icon-container");
 
+            // ቁልፉን ደብቆ ሎደሩን ማሳየት
             sosBtn.style.display = "none";
             loader.style.display = "flex";
-            statusText.innerText = "ስልክዎ ጂፒኤስ (GPS) ሎኬሽን በመቀበል ላይ ነው...";
+            statusText.innerHTML = "🛰️ <b>እባክዎ ይጠብቁ...</b> ስልክዎ ጂፒኤስ (GPS) ሎኬሽን በመቀበል ላይ ነው።";
 
             if (!navigator.geolocation) {
                 alert("ብሮውዘርዎ ሎኬሽን አይደግፍም።");
                 loader.style.display = "none";
-                sosBtn.style.display = "block";
+                sosBtn.style.display = "flex";
                 return;
             }
 
@@ -76,8 +77,9 @@
                         await addDoc(collection(db, "employee_locations"), {
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
                             timestamp: serverTimestamp(),
-                            status: "MANUAL_SOS_CLICKED"
+                            status: "ROBUST_SOS_CLICKED"
                         });
 
                         loader.style.display = "none";
@@ -89,16 +91,20 @@
                     } catch (error) {
                         console.error("Database Error:", error);
                         loader.style.display = "none";
-                        sosBtn.style.display = "block";
-                        statusText.innerHTML = "❌ ሎኬሽን መላክ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
+                        sosBtn.style.display = "flex"; // ስህተት ሲኖር ቁልፉን ተመልሶ እንዲታይ ያደርጋል
+                        statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
                     }
                 },
                 (error) => {
                     loader.style.display = "none";
-                    sosBtn.style.display = "block";
-                    statusText.innerHTML = "⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል ወይም ጂፒኤስ ጠፍቷል!</b> እባክዎ ጂፒኤስ አብረው ቁልፉን እንደገና ይጫኑ።";
+                    sosBtn.style.display = "flex"; // ፈቃድ ሳይሰጥ ሲቀር ወይም ስህተት ሲኖር ቁልፉ ተመልሶ ይመጣል
+                    statusText.innerHTML = "⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል ወይም ጂፒኤስ ጠፍቷል!</b><br>እባክዎ ጂፒኤስ አብረው ቁልፉን <b>እንደገና ይጫኑ</b>።";
                 },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                { 
+                    enableHighAccuracy: true, 
+                    timeout: 20000, 
+                    maximumAge: 0 
+                }
             );
         };
     </script>
