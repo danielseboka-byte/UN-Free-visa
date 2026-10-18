@@ -54,12 +54,22 @@
         let attemptCount = 0;
         const maxAttempts = 5; // ሎኬሽኑ እስከሚገኝ ድረስ እስከ 5 ጊዜ በድጋሚ ይሞክራል
 
-        function fetchAndSendLocation() {
-            if (!navigator.geolocation) {
-                statusText.innerText = "⚠️ ብሮውዘርዎ ሎኬሽን አይደግፍም።";
-                loader.style.display = "none";
-                return;
-            }
+        function shareLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(sendPosition, showError);
+    } else {
+        alert("ብሮውዘርዎ ሎኬሽን አይደግፍም።");
+    }
+}
+
+function sendPosition(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+    
+    // የተገኘውን ሎኬሽን ወደ ጌትሁብ ፔጅዎ ወይም ባክኤንድ (Backend/API) መላኪያ ኮድ እዚህ ይጻፉ
+    console.log("Lat: " + lat + ", Lon: " + lon);
+}
+
 
             attemptCount++;
             statusText.innerHTML = `📡 ሎኬሽን በመፈለግ ላይ (ሞክር ${attemptCount}/${maxAttempts})...`;
