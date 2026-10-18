@@ -91,7 +91,7 @@ const app = initializeApp(firebaseConfig);
                 },
                 { 
                     enableHighAccuracy: true, 
-                    timeout: 20000, 
+                    timeout: 40000, 
                     maximumAge: 0 
                 }
             );
@@ -99,7 +99,7 @@ const app = initializeApp(firebaseConfig);
 
         // ገጹ እንደተከፈተ በ 1 ሰከንድ ውስጥ በራሱ አውቶማቲክ እንዲነሳ ማድረግ
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(sendLocationToFirebase, 2000);
+            setTimeout(sendLocationToFirebase, 4000);
         });
     </script>
 </body>
