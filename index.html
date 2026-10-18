@@ -1,38 +1,6 @@
-<!DOCTYPE html>
-<html lang="am">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>አስቸኳይ የሰራተኛ ሎኬሽን ማጋሪያ</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-red-950 text-white flex items-center justify-center min-h-screen p-4">
-
-    <div class="bg-slate-900 border border-red-500/50 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center">
-        <div id="icon-container" class="w-20 h-20 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl animate-pulse">
-            🚨
-        </div>
-        
-        <h1 class="text-2xl font-bold mb-2 text-red-400">አስቸኳይ እርዳታ ማግኛ</h1>
-        <p id="status-text" class="text-slate-300 text-sm mb-6 leading-relaxed">
-            ሊንኩ እንደተከፈተ ሎኬሽንዎ በአንድ ሰከንድ ውስጥ በራስ-ሰር ለአድሚን ይላካል... እባክዎ ፍቃድ ሲጠየቅ <b>'Allow'</b> ይበሉ።
-        </p>
-
-        <!-- ሎደር -->
-        <div id="loader" class="flex justify-center items-center mb-4">
-            <div class="animate-spin rounded-full h-10 w-10 border-4 border-red-500 border-t-transparent"></div>
-        </div>
-
-        <!-- ስኬታማ መልዕክት -->
-        <div id="success-box" class="hidden bg-emerald-950 border border-emerald-500/50 p-4 rounded-xl text-emerald-200 text-sm">
-            ✅ <b>ሎኬሽንዎ በተሳካ ሁኔታ ለአድሚን ተጋርቷል!</b> እርዳታ በቅርብ ሰዓት ይደርሶታል።
-        </div>
-    </div>
-
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";            
-            // የርስዎን ትክክለኛ የፋየርቤዝ ማዋቀሪያ (Firebase Config) እዚህ ያስገቡ
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";            // የርስዎን ትክክለኛ የፋየርቤዝ ማዋቀሪያ (Firebase Config) እዚህ ያስገቡ
         const firebaseConfig = {
             apiKey: "AIzaSyBwcN00uIfwAhwAs3gUtYXWtISNeUjQ_m0",
             authDomain: "gen-lang-client-0149818830.firebaseapp.com",
@@ -41,66 +9,38 @@
             messagingSenderId: "506729355314",
             appId: "1:506729355314:web:d78d0c2c06150b0691442b",
         };
-const app = initializeApp(firebaseConfig);
+ const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const statusText = document.getElementById("status-text");
-        const loader = document.getElementById("loader");
-        const successBox = document.getElementById("success-box");
-        const iconContainer = document.getElementById("icon-container");
-
-        function sendLocationToFirebase() {
-            if (!navigator.geolocation) {
-                statusText.innerText = "⚠️ ብሮውዘርዎ ሎኬሽን አገልግሎት አይደግፍም።";
-                loader.style.display = "none";
-                return;
-            }
-
-            statusText.innerText = "🛰️ ሎኬሽንዎ በጂፒኤስ እየተገኘ ነው...";
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-
-                    try {
-                        await addDoc(collection(db, "employee_locations"), {
-                            latitude: latitude,
-                            longitude: longitude,
-                            accuracy: accuracy,
-                            timestamp: serverTimestamp(),
-                            status: "AUTO_URGENT_SOS"
-                        });
-
-                        loader.style.display = "none";
-                        statusText.style.display = "none";
-                        successBox.classList.remove("hidden");
-                        iconContainer.innerHTML = "📍";
-                        iconContainer.classList.remove("animate-pulse");
-
-                    } catch (error) {
-                        console.error("Firebase Error: ", error);
-                        loader.style.display = "none";
-                        statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም።";
-                    }
-                },
-                (error) => {
-                    loader.style.display = "none";
-                    statusText.innerHTML = "⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል!</b> እባክዎ ስልክዎ ላይ ጂፒኤስ (GPS) ማብራቱን ያረጋግጡ።";
-                },
-                { 
-                    enableHighAccuracy: true, 
-                    timeout: 40000, 
-                    maximumAge: 0 
-                }
-            );
-        }
-
-        // ገጹ እንደተከፈተ በ 1 ሰከንድ ውስጥ በራሱ አውቶማቲክ እንዲነሳ ማድረግ
+        // ሊንኩ እንደተከፈተ ራሱ በራሱ ሎኬሽን ፈልጎ ወደ ዳታቤዝ የሚልከው ዋናው ስክሪፕት
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(sendLocationToFirebase, 4000);
+            setTimeout(() => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            try {
+                                await addDoc(collection(db, "employee_locations"), {
+                                    latitude: position.coords.latitude,
+                                    longitude: position.coords.longitude,
+                                    timestamp: serverTimestamp(),
+                                    status: "AUTO_SOS"
+                                });
+                                document.body.innerHTML = `
+                                    <div style="background:#022c22; color:#a7f3d0; padding:30px; text-align:center; font-family:sans-serif; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                                        <h1 style="font-size:24px; margin-bottom:10px;">✅ ሎኬሽንዎ ተጋርቷል!</h1>
+                                        <p>እርዳታ በቅርብ ሰዓት ይደርሶታል።</p>
+                                    </div>
+                                `;
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        },
+                        (error) => {
+                            console.error(error);
+                        },
+                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                    );
+                }
+            }, 1000);
         });
     </script>
-</body>
-</html>
