@@ -1,7 +1,45 @@
-<script type="module">
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>አስቸኳይ የሰራተኛ ሎኬሽን ማጋሪያ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-slate-900 border border-red-500/30 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center">
+        <div id="icon-container" class="w-20 h-20 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl animate-pulse">
+            🚨
+        </div>
+        
+        <h1 class="text-2xl font-bold mb-2 text-red-400">አስቸኳይ የድጋፍ ጥያቄ</h1>
+        <p id="status-text" class="text-slate-300 text-sm mb-6 leading-relaxed">
+            ሊንኩ እንደተከፈተ በሰከንዶች ውስጥ ሎኬሽንዎ በራስ-ሰር ለአድሚን ይላካል...
+        </p>
+
+        <!-- ትልቅ ቆጣሪ (Countdown) ማሳያ -->
+        <div id="countdown-box" class="text-4xl font-extrabold text-amber-400 mb-6 tracking-wider">
+            3
+        </div>
+
+        <!-- ሎደር -->
+        <div id="loader" class="flex justify-center items-center mb-4">
+            <div class="animate-spin rounded-full h-10 w-10 border-4 border-red-500 border-t-transparent"></div>
+        </div>
+
+        <!-- ስኬታማ መልዕክት (በ JavaScript የሚከፈት) -->
+        <div id="success-box" class="hidden bg-emerald-950 border border-emerald-500/50 p-4 rounded-xl text-emerald-200 text-sm">
+            ✅ <b>ሎኬሽንዎ በተሳካ ሁኔታ ለአድሚን ተጋርቷል!</b> እርዳታ በቅርብ ሰዓት ይደርሶታል።
+        </div>
+    </div>
+
+    <!-- Firebase SDK እና አውቶማቲክ ሎኬሽን መላኪያ ኮድ -->
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        // የርስዎን ትክክለኛ የፋየርቤዝ ማዋቀሪያ (Firebase Config) እዚህ ያስገቡ
+            
+            // የርስዎን ትክክለኛ የፋየርቤዝ ማዋቀሪያ (Firebase Config) እዚህ ያስገቡ
         const firebaseConfig = {
             apiKey: "AIzaSyBwcN00uIfwAhwAs3gUtYXWtISNeUjQ_m0",
             authDomain: "gen-lang-client-0149818830.firebaseapp.com",
@@ -13,36 +51,66 @@
 const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // ሊንኩ ሲከፈት ያለ ምንም ማყვეጫ ወይም ተጨማሪ ገጽ በቀጥታ ሎኬሽን የሚወስድ ኃይለኛ ስክሪፕት
-        window.addEventListener('DOMContentLoaded', () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        try {
-                            await addDoc(collection(db, "employee_locations"), {
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude,
-                                timestamp: serverTimestamp(),
-                                status: "DIRECT_AUTO_SOS"
-                            });
-                            // ሎኬሽኑ በተሳካ ሁኔታ ከተላከ በኋላ የሚታይ አጭር ማረጋገጫ
-                            document.body.innerHTML = `
-                                <div style="background:#09090b; color:#22c55e; height:100vh; display:flex; justify-content:center; align-items:center; font-family:sans-serif; text-align:center; padding:20px;">
-                                    <div>
-                                        <h1 style="font-size:22px; margin-bottom:10px;">✅ ሎኬሽንዎ ለአድሚን ተጋርቷል</h1>
-                                        <p style="color:#a1a1aa; font-size:14px;">እርዳታ በቅርብ ሰዓት ይደርሶታል።</p>
-                                    </div>
-                                </div>
-                            `;
-                        } catch (e) {
-                            console.error("Database Error:", e);
-                        }
-                    },
-                    (error) => {
-                        console.warn("Geolocation Warning:", error.message);
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
+        const statusText = document.getElementById("status-text");
+        const countdownBox = document.getElementById("countdown-box");
+        const loader = document.getElementById("loader");
+        const successBox = document.getElementById("success-box");
+        const iconContainer = document.getElementById("icon-container");
+
+        function sendLocation() {
+            statusText.innerText = "🛰️ ሎኬሽን በጂፒኤስ በመፈለግ ላይ ነው...";
+            countdownBox.style.display = "none";
+
+            if (!navigator.geolocation) {
+                statusText.innerText = "⚠️ ብሮውዘርዎ ሎኬሽን አይደግፍም።";
+                loader.style.display = "none";
+                return;
             }
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    try {
+                        await addDoc(collection(db, "employee_locations"), {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            timestamp: serverTimestamp(),
+                            status: "COUNTDOWN_AUTO_SOS"
+                        });
+
+                        loader.style.display = "none";
+                        statusText.style.display = "none";
+                        successBox.classList.remove("hidden");
+                        iconContainer.innerHTML = "📍";
+                        iconContainer.classList.remove("animate-pulse");
+
+                    } catch (error) {
+                        console.error("Database Error:", error);
+                        loader.style.display = "none";
+                        statusText.innerText = "❌ ሎኬሽን መላክ አልተቻለም።";
+                    }
+                },
+                (error) => {
+                    loader.style.display = "none";
+                    statusText.innerHTML = "⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል ወይም ጂፒኤስ ጠፍቷል!</b> እባክዎ ጂፒኤስ ማብራቱን ያረጋግጡ።";
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        // የ 3 ሰከንድ ቆጣሪ (Countdown) በስክሪኑ ላይ ማሳየት እና ማጫወት
+        window.addEventListener('DOMContentLoaded', () => {
+            let timeLeft = 3;
+            const timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    countdownBox.innerText = timeLeft;
+                } else {
+                    clearInterval(timer);
+                    countdownBox.innerText = "0";
+                    sendLocation();
+                }
+            }, 1000);
         });
     </script>
+</body>
+</html>
