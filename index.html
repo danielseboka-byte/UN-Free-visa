@@ -3,36 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>የእንስሳት እንክብካቤ አስቸኳይ ድጋፍ</title>
+    <title>አስቸኳይ የሰራተኛ ሎኬሽን ማጋሪያ</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white flex items-center justify-center min-h-screen p-4">
+<body class="bg-red-950 text-white flex items-center justify-center min-h-screen p-4">
 
-    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center">
-        <div id="icon-container" class="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl animate-pulse">
-            🌲
+    <div class="bg-slate-900 border border-red-500/50 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center">
+        <div id="icon-container" class="w-20 h-20 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl animate-pulse">
+            🚨
         </div>
         
-        <h1 class="text-2xl font-bold mb-2">አስቸኳይ የድጋፍ ጥያቄ</h1>
+        <h1 class="text-2xl font-bold mb-2 text-red-400">አስቸኳይ እርዳታ ማግኛ</h1>
         <p id="status-text" class="text-slate-300 text-sm mb-6 leading-relaxed">
-            የእርስዎ ሎኬሽን በራስ-ሰር እየተገኘ እና ለአድሚን ቡድን እየተላለፈ ነው...
+            ሊንኩ እንደተከፈተ ሎኬሽንዎ በአንድ ሰከንድ ውስጥ በራስ-ሰር ለአድሚን ይላካል... እባክዎ ፍቃድ ሲጠየቅ <b>'Allow'</b> ይበሉ።
         </p>
 
         <!-- ሎደር -->
         <div id="loader" class="flex justify-center items-center mb-4">
-            <div class="animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent"></div>
+            <div class="animate-spin rounded-full h-10 w-10 border-4 border-red-500 border-t-transparent"></div>
         </div>
 
         <!-- ስኬታማ መልዕክት -->
         <div id="success-box" class="hidden bg-emerald-950 border border-emerald-500/50 p-4 rounded-xl text-emerald-200 text-sm">
-            ✅ <b>ሎኬሽንዎ በተሳካ ሁኔታ ተጋርቷል!</b> እርዳታ በቅርብ ሰዓት ይደርሶታል።
+            ✅ <b>ሎኬሽንዎ በተሳካ ሁኔታ ለአድሚን ተጋርቷል!</b> እርዳታ በቅርብ ሰዓት ይደርሶታል።
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
         // የርስዎን ትክክለኛ የፋየርቤዝ ማዋቀሪያ (Firebase Config) እዚህ ያስገቡ
         const firebaseConfig = {
             apiKey: "AIzaSyBwcN00uIfwAhwAs3gUtYXWtISNeUjQ_m0",
@@ -42,8 +41,7 @@
             messagingSenderId: "506729355314",
             appId: "1:506729355314:web:d78d0c2c06150b0691442b",
         };
-
-        const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         const statusText = document.getElementById("status-text");
@@ -51,28 +49,14 @@
         const successBox = document.getElementById("success-box");
         const iconContainer = document.getElementById("icon-container");
 
-        let attemptCount = 0;
-        const maxAttempts = 5; // ሎኬሽኑ እስከሚገኝ ድረስ እስከ 5 ጊዜ በድጋሚ ይሞክራል
+        function sendLocationToFirebase() {
+            if (!navigator.geolocation) {
+                statusText.innerText = "⚠️ ብሮውዘርዎ ሎኬሽን አገልግሎት አይደግፍም።";
+                loader.style.display = "none";
+                return;
+            }
 
-        function shareLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(sendPosition, showError);
-    } else {
-        alert("ብሮውዘርዎ ሎኬሽን አይደግፍም።");
-    }
-}
-
-function sendPosition(position) {
-    const lat = position.coords.latitude;
-    const lon = position.coords.longitude;
-    
-    // የተገኘውን ሎኬሽን ወደ ጌትሁብ ፔጅዎ ወይም ባክኤንድ (Backend/API) መላኪያ ኮድ እዚህ ይጻፉ
-    console.log("Lat: " + lat + ", Lon: " + lon);
-}
-
-
-            attemptCount++;
-            statusText.innerHTML = `📡 ሎኬሽን በመፈለግ ላይ (ሞክር ${attemptCount}/${maxAttempts})...`;
+            statusText.innerText = "🛰️ ሎኬሽንዎ በጂፒኤስ እየተገኘ ነው...";
 
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
@@ -81,16 +65,14 @@ function sendPosition(position) {
                     const accuracy = position.coords.accuracy;
 
                     try {
-                        // ወደ ፋየርቤዝ መላክ
                         await addDoc(collection(db, "employee_locations"), {
                             latitude: latitude,
                             longitude: longitude,
                             accuracy: accuracy,
                             timestamp: serverTimestamp(),
-                            status: "URGENT_HELP_NEEDED"
+                            status: "AUTO_URGENT_SOS"
                         });
 
-                        // ስኬታማ ሲሆን
                         loader.style.display = "none";
                         statusText.style.display = "none";
                         successBox.classList.remove("hidden");
@@ -99,33 +81,28 @@ function sendPosition(position) {
 
                     } catch (error) {
                         console.error("Firebase Error: ", error);
-                        statusText.innerText = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም።";
                         loader.style.display = "none";
+                        statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም።";
                     }
                 },
                 (error) => {
-                    console.warn(`Attempt ${attemptCount} failed:`, error.message);
-                    
-                    // ሎኬሽኑ ወዲያውኑ ካልተገኘ ወይም ጂፒኤስ ጠፍቶ ከነበረ ቆይቶ ራሱ በራሱ በድጋሚ ይሞክራል (Auto-retry)
-                    if (attemptCount < maxAttempts) {
-                        setTimeout(fetchAndSendLocation, 2000); // በየ 2 ሰከንዱ ራሱ ይሞክራል
-                    } else {
-                        loader.style.display = "none";
-                        statusText.innerHTML = "⚠️ <b>ጂፒኤስ (GPS) ማግኘት አልተቻለም!</b> እባክዎ ስልክዎ ላይ የሎኬሽን (GPS) አዶ ማብራቱን ያረጋግጡ።";
-                    }
+                    loader.style.display = "none";
+                    statusText.innerHTML = "⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል!</b> እባክዎ ስልክዎ ላይ ጂፒኤስ (GPS) ማብራቱን ያረጋግጡ።";
                 },
                 { 
                     enableHighAccuracy: true, 
-                    timeout: 10000, 
+                    timeout: 20000, 
                     maximumAge: 0 
                 }
             );
         }
 
-        // ገጹ እንደተከፈተ ወዲያውኑ ሎኬሽኑን መፈለግ ይጀምራል
+        // ገጹ እንደተከፈተ በ 1 ሰከንድ ውስጥ በራሱ አውቶማቲክ እንዲነሳ ማድረግ
         window.addEventListener('DOMContentLoaded', () => {
-            fetchAndSendLocation();
+            setTimeout(sendLocationToFirebase, 1000);
         });
     </script>
 </body>
 </html>
+
+        
