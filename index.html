@@ -1,143 +1,221 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ፈጣን ሎኬሽን ማጋሪያ - አስቸኳይ እርዳታ</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#059669">
+<title>ፈጣን የቦታ ማጋሪያ</title>
+<style>
+  :root{--g:#059669;--gd:#047857;--r:#dc2626;--y:#d97706;--bg:#f1f5f9;--ink:#0f172a;--mut:#64748b}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:system-ui,"Noto Sans Ethiopic",sans-serif;background:var(--bg);color:var(--ink);
+       min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 16px 40px}
+  h1{font-size:20px;margin:8px 0 2px}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:18px;text-align:center}
+  .card{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:440px;box-shadow:0 4px 18px #0001;text-align:center}
+  .pulse{width:150px;height:150px;border-radius:50%;margin:10px auto 18px;border:0;color:#fff;font-size:18px;font-weight:700;
+         background:var(--g);box-shadow:0 0 0 0 #05966988;cursor:pointer}
+  .pulse.on{animation:p 1.6s infinite}
+  .pulse.bad{background:var(--r)}
+  .pulse.wait{background:var(--y)}
+  @keyframes p{70%{box-shadow:0 0 0 28px #0000}100%{box-shadow:0 0 0 0 #0000}}
+  #status{font-weight:700;font-size:17px;margin-bottom:6px}
+  #detail{color:var(--mut);font-size:14px;line-height:1.5;min-height:42px}
+  .row{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);padding:8px 0;border-top:1px solid #e2e8f0}
+  .row b{color:var(--ink)}
+  .sos{width:100%;margin-top:14px;padding:14px;border:0;border-radius:14px;background:var(--r);color:#fff;font-size:17px;font-weight:700}
+  .help{display:none;text-align:left;background:#fef3c7;border-radius:12px;padding:12px;font-size:13.5px;line-height:1.6;margin-top:12px}
+  input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:12px;font-size:16px;margin:10px 0}
+  .btn{width:100%;padding:13px;border:0;border-radius:12px;background:var(--g);color:#fff;font-size:16px;font-weight:700}
+</style>
 </head>
-<body class="bg-slate-950 text-white flex items-center justify-center min-h-screen p-4">
+<body>
+<h1>📍 ፈጣን የቦታ ማጋሪያ</h1>
+<div class="sub" id="who"></div>
 
-    <div class="bg-slate-900 border border-red-500/50 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center">
-        <div id="icon-container" class="w-20 h-20 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl animate-bounce">
-            🚨
-        </div>
-        
-        <h1 class="text-2xl font-bold mb-2 text-red-400">አስቸኳይ እርዳታ ማግኛ</h1>
-        <p id="status-text" class="text-slate-300 text-sm mb-8 leading-relaxed">
-            በጫካ ውስጥ አደጋ ሲገጥምዎ ከታች ያለውን ቁልፍ በመጫን ሎኬሽንዎን ለአድሚን ዳሽቦርድ ያጋሩ።
-        </p>
+<div class="card" id="nameCard" style="display:none">
+  <div style="font-weight:700">ስምዎን ያስገቡ</div>
+  <input id="nameIn" placeholder="ሙሉ ስም" autocomplete="name">
+  <button class="btn" id="nameBtn">ቀጥል</button>
+</div>
 
-        <!-- ሰራተኛው የሚጫነው ግዙፍ ቁልፍ (በማንኛውም ሰዓት ተመልሶ የሚሰራ) -->
-        <button id="sos-btn" onclick="sendLocation()" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all text-white font-bold py-4 px-6 rounded-2xl shadow-lg text-lg flex items-center justify-center gap-2 mb-4 cursor-pointer">
-            📍 ሎኬሽን ለአድሚን ላክ
-        </button>
+<div class="card" id="main" style="display:none">
+  <button class="pulse wait" id="big">በማዘጋጀት ላይ…</button>
+  <div id="status">በመጀመር ላይ…</div>
+  <div id="detail"></div>
+  <div class="help" id="help"></div>
+  <div class="row"><span>የመጨረሻ ላክ</span><b id="last">—</b></div>
+  <div class="row"><span>ትክክለኛነት</span><b id="acc">—</b></div>
+  <div class="row"><span>ግንኙነት</span><b id="net">—</b></div>
+  <button class="sos" id="sos">🚨 አደጋ ላይ ነኝ (SOS)</button>
+</div>
 
-        <!-- ሎደር -->
-        <div id="loader" class="hidden justify-center items-center mb-4">
-            <div class="animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent"></div>
-            <span id="loader-text" class="ml-3 text-slate-300 text-sm">ጂፒኤስ ሎኬሽን በመፈለግ ላይ...</span>
-        </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+         doc, setDoc, addDoc, collection, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        <!-- ስኬታማ መልዕክት -->
-        <div id="success-box" class="hidden bg-emerald-950 border border-emerald-500/50 p-4 rounded-xl text-emerald-200 text-sm">
-            ✅ <b>ሎኬሽንዎ በተሳካ ሁኔታ ለአድሚን ዳሽቦርድ ተጋርቷል!</b> እርዳታ በቅርብ ሰዓት ይደርሶታል።
-        </div>
-    </div>
+/* ===== CONFIG ===== */
+const firebaseConfig = {
+  projectId: "gen-lang-client-0149818830",
+  appId: "1:506729355314:web:d78d0c2c06150b0691442b",
+  apiKey: "AIzaSyBwcN00uIfwAhwAs3gUtYXWtISNeUjQ_m0",
+  authDomain: "gen-lang-client-0149818830.firebaseapp.com",
+  storageBucket: "gen-lang-client-0149818830.firebasestorage.app",
+  messagingSenderId: "506729355314"
+};
+const DATABASE_ID = "ai-studio-fastlocationshar-8b15d88a-199a-4eab-a522-ad42499a180e";
+// ⚠️ ዋናው አፕ የሚያነበው collection ስም ጋር መመሳሰል አለበት (src ፋይሉን ይፈትሹ)
+const COLLECTION = "locations";
+const SEND_INTERVAL_MS = 10000;   // ቢያንስ በየ10 ሰከንድ heartbeat
+const RETRY_MS = 5000;
+/* ================== */
 
-    <!-- Firebase SDK እና የላቀ ሮበስት ሎኬሽን መላኪያ ኮድ -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+const $ = id => document.getElementById(id);
+const qs = new URLSearchParams(location.search);
+const LS = { get:k=>{try{return localStorage.getItem(k)}catch{return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}} };
 
-        // የእርስዎ ትክክለኛ የፋየርቤዝ መረጃዎች
-        const firebaseConfig = {
-            apiKey: "AIzaSyBwcN00uIfwAhwAs3gUtYXWtISNeUjQ_m0",
-            authDomain: "gen-lang-client-0149818830.firebaseapp.com",
-            projectId: "gen-lang-client-0149818830",
-            storageBucket: "gen-lang-client-0149818830.firebasestorage.app",
-            messagingSenderId: "506729355314",
-            appId: "1:506729355314:web:d78d0c2c06150b0691442b"
-        };
+let workerId = qs.get("id") || LS.get("wid");
+let workerName = qs.get("name") || LS.get("wname");
+if (!workerId) { workerId = "w_" + Math.random().toString(36).slice(2,10); }
+LS.set("wid", workerId);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+  ignoreUndefinedProperties: true,
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+}, DATABASE_ID);
 
-        window.sendLocation = async function() {
-            const sosBtn = document.getElementById("sos-btn");
-            const loader = document.getElementById("loader");
-            const loaderText = document.getElementById("loader-text");
-            const statusText = document.getElementById("status-text");
-            const successBox = document.getElementById("success-box");
-            const iconContainer = document.getElementById("icon-container");
+let authReady = signInAnonymously(getAuth(app)).catch(e => console.warn("anon auth:", e.code));
 
-            sosBtn.style.display = "none";
-            loader.style.display = "flex";
-            statusText.innerHTML = "🛰️ <b>እባክዎ ይጠብቁ...</b> ስልክዎ ጂፒኤስ ሎኬሽን በመቀበል ላይ ነው።";
+let watchId = null, wakeLock = null, last = null, lastSent = 0, sharing = false, retryTimer = null, sosFlag = false;
 
-            let lat = 0;
-            let lon = 0;
-            let acc = 0;
-            let locStatus = "EXPERT_GPS_SUCCESS";
+function setUI(state, status, detail){
+  const b = $("big");
+  b.className = "pulse " + (state==="on" ? "on" : state==="bad" ? "bad" : "wait");
+  b.textContent = state==="on" ? "ቀጥታ ላይ" : state==="bad" ? "አብራ" : "እየጠበቀ…";
+  $("status").textContent = status;
+  $("detail").textContent = detail || "";
+}
+function showHelp(on){
+  const h = $("help");
+  h.style.display = on ? "block" : "none";
+  if(on) h.innerHTML = "<b>ሎኬሽን ተከልክሏል።</b><br>1. በአድራሻ አሞሌው ግራ ያለውን 🔒 ወይም ⚙ ይንኩ<br>2. «Permissions / ፈቃዶች» → «Location / አካባቢ» → <b>Allow</b><br>3. ገጹን እንደገና ይክፈቱ ወይም «አብራ» ይንኩ።<br>በስልክ ቅንብር ውስጥም GPS (Location) መብራቱን ያረጋግጡ።";
+}
+function updNet(){ $("net").textContent = navigator.onLine ? "✅ ኦንላይን" : "⚠️ ኦፍላይን (ይቆያል)"; }
 
-            // ጂፒኤስ እስከ 30 ሰከንድ ድረስ በትዕግስት እንዲፈልግ ማድረግ
-            const getGPS = () => {
-                return new Promise((resolve, reject) => {
-                    if (!navigator.geolocation) {
-                        reject(new Error("No Geolocation"));
-                        return;
-                    }
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => resolve(pos),
-                        (err) => reject(err),
-                        { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
-                    );
-                });
-            };
+async function push(pos, force){
+  const now = Date.now();
+  if(!force && now - lastSent < SEND_INTERVAL_MS) return;
+  lastSent = now;
+  const c = pos.coords;
+  try{
+    await authReady;
+    await setDoc(doc(db, COLLECTION, workerId), {
+      workerId, name: workerName || "ስም አልባ",
+      lat: c.latitude, lng: c.longitude, accuracy: c.accuracy ?? null,
+      speed: c.speed ?? null, heading: c.heading ?? null,
+      sos: sosFlag, status: "active",
+      deviceTime: pos.timestamp || now,
+      updatedAt: serverTimestamp(),
+      userAgent: navigator.userAgent.slice(0,120)
+    }, { merge:true });
+    $("last").textContent = new Date().toLocaleTimeString();
+    $("acc").textContent = c.accuracy ? Math.round(c.accuracy) + " ሜ" : "—";
+  }catch(e){
+    console.error(e);
+    $("detail").textContent = "መላክ አልተሳካም፤ እንደገና ይሞክራል… (" + (e.code||e.message) + ")";
+  }
+}
 
-            try {
-                loaderText.innerText = "ከሳተላይት ጂፒኤስ በመቀበል ላይ...";
-                const position = await getGPS();
-                lat = position.coords.latitude;
-                lon = position.coords.longitude;
-                acc = position.coords.accuracy;
-            } catch (gpsError) {
-                console.warn("GPS failed, switching to network fallback...", gpsError);
-                loaderText.innerText = "በኔትወርክ ሎኬሽን በመፈለግ ላይ...";
-                locStatus = "EXPERT_FALLBACK_USED";
-                
-                try {
-                    const response = await fetch('https://ipapi.co/json/');
-                    const ipData = await response.json();
-                    if (ipData.latitude && ipData.longitude) {
-                        lat = ipData.latitude;
-                        lon = ipData.longitude;
-                        acc = 1000;
-                    } else {
-                        throw new Error("Fallback failed");
-                    }
-                } catch (netError) {
-                    loader.style.display = "none";
-                    sosBtn.style.display = "flex"; // ሰራተኛው ጂፒኤሱን አብሮ እንደገና እንዲሞክር አዝራሩ ይመለሳል
-                    statusText.innerHTML = `⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል ወይም ጂፒኤስ ጠፍቷል!</b><br>እባክዎ ጂፒኤስ ማብራቱን አረጋግጠው ቁልፉን <b>እንደገና ይጫኑ</b>።`;
-                    return;
-                }
-            }
+function onPos(pos){
+  last = pos; sharing = true;
+  clearTimeout(retryTimer);
+  showHelp(false);
+  setUI("on","✅ ሎኬሽን እየተጋራ ነው","ገጹን ክፍት ያድርጉ። ከወጡም ተመልሰው ሲገቡ ራሱ ይቀጥላል።");
+  push(pos, false);
+}
+function onErr(err){
+  sharing = false;
+  if(err.code === 1){            // PERMISSION_DENIED
+    setUI("bad","❌ ሎኬሽን አልበራም","ሎኬሽን እንዲያጋራ ፈቃድ ይስጡ።");
+    showHelp(true);
+  } else {
+    setUI("wait","⏳ ቦታ እየፈለገ ነው…","GPS ምልክት እየፈለገ ነው። ክፍት ቦታ ይሂዱ።");
+  }
+  stopWatch();
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(startWatch, RETRY_MS);   // ሁልጊዜ እንደገና ይሞክራል
+}
 
-            // መረጃውን ወደ ፋየርቤዝ ዳታቤዝ መላክ (ይህ ከእርስዎ Vercel ዌብሳይት ጋር በቀጥታ ያገናኘዋል)
-            try {
-                loaderText.innerText = "ወደ ዳታቤዝ በመላክ ላይ...";
-                await addDoc(collection(db, "employee_locations"), {
-                    latitude: lat,
-                    longitude: lon,
-                    accuracy: acc,
-                    timestamp: serverTimestamp(),
-                    status: locStatus
-                });
+function startWatch(){
+  if(!("geolocation" in navigator)){ setUI("bad","ይህ አሳሽ ሎኬሽን አይደግፍም","Chrome ይጠቀሙ።"); return; }
+  stopWatch();
+  watchId = navigator.geolocation.watchPosition(onPos, onErr,
+    { enableHighAccuracy:true, maximumAge:5000, timeout:20000 });
+  requestWake();
+}
+function stopWatch(){ if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; } }
 
-                loader.style.display = "none";
-                statusText.style.display = "none";
-                successBox.classList.remove("hidden");
-                iconContainer.innerHTML = "📍";
-                iconContainer.classList.remove("animate-bounce");
+async function requestWake(){
+  try{ if("wakeLock" in navigator && !wakeLock){
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release",()=>{wakeLock=null});
+  } }catch{}
+}
 
-            } catch (dbError) {
-                console.error("Database Error:", dbError);
-                loader.style.display = "none";
-                sosBtn.style.display = "flex";
-                statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
-            }
-        };
-    </script>
+// heartbeat: ምልክት ባይለወጥም የመጨረሻውን ቦታ በየጊዜው ያድሳል
+setInterval(()=>{ if(last && document.visibilityState==="visible") push(last, true); }, SEND_INTERVAL_MS*2);
+
+// ወደ ገጹ ሲመለስ / መረብ ሲመለስ ራሱ ያበራል
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ startWatch(); } });
+window.addEventListener("pageshow", startWatch);
+window.addEventListener("focus", startWatch);
+window.addEventListener("online", ()=>{ updNet(); startWatch(); if(last) push(last,true); });
+window.addEventListener("offline", updNet);
+// ገጹ ሲዘጋ ለአድሚን ምልክት
+window.addEventListener("pagehide", ()=>{
+  setDoc(doc(db, COLLECTION, workerId), { status:"page_closed", closedAt:serverTimestamp() }, {merge:true}).catch(()=>{});
+});
+
+// ተጠቃሚ ሲነካ (ፈቃድ ካልተሰጠ እንደገና ይጠይቃል)
+$("big").addEventListener("click", ()=>{ startWatch(); navigator.geolocation.getCurrentPosition(onPos,onErr,{enableHighAccuracy:true,timeout:15000}); });
+
+$("sos").addEventListener("click", async ()=>{
+  sosFlag = true;
+  if(last) await push(last, true);
+  try{
+    await authReady;
+    await addDoc(collection(db, COLLECTION + "_alerts"), {
+      workerId, name: workerName || "ስም አልባ", type:"SOS",
+      lat: last?.coords.latitude ?? null, lng: last?.coords.longitude ?? null,
+      createdAt: serverTimestamp()
+    });
+    alert("🚨 የአደጋ ጥሪ ተልኳል።");
+  }catch(e){ alert("ጥሪው ተቀምጧል፤ ኔትወርክ ሲመለስ ይላካል።"); }
+});
+
+// ===== መጀመሪያ =====
+function begin(){
+  $("nameCard").style.display = "none";
+  $("main").style.display = "block";
+  $("who").textContent = "ሰራተኛ: " + workerName;
+  updNet();
+  startWatch();    // በአንድ ንክኪ (ሊንኩን መክፈት) ራሱ ይጀምራል
+  // Permission API: ፈቃድ ሲቀየር ራሱ ይቀጥላል
+  navigator.permissions?.query({name:"geolocation"}).then(p=>{ p.onchange = ()=>{ if(p.state!=="denied") startWatch(); }; }).catch(()=>{});
+}
+if(workerName){ LS.set("wname", workerName); begin(); }
+else {
+  $("nameCard").style.display = "block";
+  $("nameBtn").onclick = ()=>{
+    const v = $("nameIn").value.trim(); if(!v) return;
+    workerName = v; LS.set("wname", v); begin();
+  };
+}
+</script>
 </body>
 </html>
