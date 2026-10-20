@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="am">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>አስቸኳይ የሰራተኛ ሎኬሽን ማጋሪያ</title>
+    <title>ፈጣን ሎኬሽን ማጋሪያ - አስቸኳይ እርዳታ</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white flex items-center justify-center min-h-screen p-4">
@@ -16,7 +15,7 @@
         
         <h1 class="text-2xl font-bold mb-2 text-red-400">አስቸኳይ እርዳታ ማግኛ</h1>
         <p id="status-text" class="text-slate-300 text-sm mb-8 leading-relaxed">
-            በጫካ ውስጥ አደጋ ሲገጥምዎ ከታች ያለውን ቁልፍ በመጫን ሎኬሽንዎን ለአድሚን ወዲያውኑ ያጋሩ።
+            በጫካ ውስጥ አደጋ ሲገጥምዎ ከታች ያለውን ቁልፍ በመጫን ሎኬሽንዎን ለአድሚን ዳሽቦርድ ያጋሩ።
         </p>
 
         <!-- ሰራተኛው የሚጫነው ግዙፍ ቁልፍ (በማንኛውም ሰዓት ተመልሶ የሚሰራ) -->
@@ -32,7 +31,7 @@
 
         <!-- ስኬታማ መልዕክት -->
         <div id="success-box" class="hidden bg-emerald-950 border border-emerald-500/50 p-4 rounded-xl text-emerald-200 text-sm">
-            ✅ <b>ሎኬሽንዎ በተሳካ ሁኔታ ለአድሚን ተጋርቷል!</b> እርዳታ በቅርብ ሰዓት ይደርሶታል።
+            ✅ <b>ሎኬሽንዎ በተሳካ ሁኔታ ለአድሚን ዳሽቦርድ ተጋርቷል!</b> እርዳታ በቅርብ ሰዓት ይደርሶታል።
         </div>
     </div>
 
@@ -41,7 +40,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // አዲሶቹ እና ትክክለኞቹ የእርስዎ የፋየርቤዝ መረጃዎች
+        // የእርስዎ ትክክለኛ የፋየርቤዝ መረጃዎች
         const firebaseConfig = {
             apiKey: "AIzaSyBwcN00uIfwAhwAs3gUtYXWtISNeUjQ_m0",
             authDomain: "gen-lang-client-0149818830.firebaseapp.com",
@@ -52,7 +51,6 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        // ከቀድሞው የዳታቤዝ መዋቅር ጋር እንዲገናኝ የተደረገ ትክክለኛ ማስተካከያ
         const db = getFirestore(app);
 
         window.sendLocation = async function() {
@@ -72,7 +70,7 @@
             let acc = 0;
             let locStatus = "EXPERT_GPS_SUCCESS";
 
-            // 1. የጂፒኤስ ጥያቄ (እስከ 30 ሰከንድ ድረስ በታጋሽነት እንዲፈልግ የተደረገ)
+            // ጂፒኤስ እስከ 30 ሰከንድ ድረስ በትዕግስት እንዲፈልግ ማድረግ
             const getGPS = () => {
                 return new Promise((resolve, reject) => {
                     if (!navigator.geolocation) {
@@ -94,7 +92,7 @@
                 lon = position.coords.longitude;
                 acc = position.coords.accuracy;
             } catch (gpsError) {
-                console.warn("GPS failed, switching to fallback...", gpsError);
+                console.warn("GPS failed, switching to network fallback...", gpsError);
                 loaderText.innerText = "በኔትወርክ ሎኬሽን በመፈለግ ላይ...";
                 locStatus = "EXPERT_FALLBACK_USED";
                 
@@ -110,15 +108,15 @@
                     }
                 } catch (netError) {
                     loader.style.display = "none";
-                    sosBtn.style.display = "flex"; // አዝራሩ በምንም መልኩ ተመልሶ እንዲነቃ ይደረጋል
-                    statusText.innerHTML = `⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል!</b><br>እባክዎ የብሮውዘርዎን ሴቲንግ (Site Settings -> Location) በመክፈት <b>Allow</b> ያድርጉና ቁልፉን <b>እንደገና ይጫኑ</b>።`;
+                    sosBtn.style.display = "flex"; // ሰራተኛው ጂፒኤሱን አብሮ እንደገና እንዲሞክር አዝራሩ ይመለሳል
+                    statusText.innerHTML = `⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል ወይም ጂፒኤስ ጠፍቷል!</b><br>እባክዎ ጂፒኤስ ማብራቱን አረጋግጠው ቁልፉን <b>እንደገና ይጫኑ</b>።`;
                     return;
                 }
             }
 
-            // 2. መረጃውን በቀጥታ ወደ ዋናው ዳታቤዝ ማስተላለፍ
+            // መረጃውን ወደ ፋየርቤዝ ዳታቤዝ መላክ (ይህ ከእርስዎ Vercel ዌብሳይት ጋር በቀጥታ ያገናኘዋል)
             try {
-                loaderText.innerText = "ወደ ዋናው ዳታቤዝ በመላክ ላይ...";
+                loaderText.innerText = "ወደ ዳታቤዝ በመላክ ላይ...";
                 await addDoc(collection(db, "employee_locations"), {
                     latitude: lat,
                     longitude: lon,
@@ -136,7 +134,7 @@
             } catch (dbError) {
                 console.error("Database Error:", dbError);
                 loader.style.display = "none";
-                sosBtn.style.display = "flex"; // ስህተት ሲፈጠር አዝራሩ ተመልሶ ሰራተኛው እንዲሞክረው ይደረጋል
+                sosBtn.style.display = "flex";
                 statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
             }
         };
