@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="am">
 <head>
@@ -18,7 +19,7 @@
             በጫካ ውስጥ አደጋ ሲገጥምዎ ከታች ያለውን ቁልፍ በመጫን ሎኬሽንዎን ለአድሚን ወዲያውኑ ያጋሩ።
         </p>
 
-        <!-- ሰራተኛው የሚጫነው ግዙፍ ቁልፍ -->
+        <!-- ሰራተኛው የሚጫነው ግዙፍ ቁልፍ (በማንኛውም ሰዓት ተመልሶ የሚሰራ) -->
         <button id="sos-btn" onclick="sendLocation()" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all text-white font-bold py-4 px-6 rounded-2xl shadow-lg text-lg flex items-center justify-center gap-2 mb-4 cursor-pointer">
             📍 ሎኬሽን ለአድሚን ላክ
         </button>
@@ -38,22 +39,20 @@
     <!-- Firebase SDK እና የላቀ ሮበስት ሎኬሽን መላኪያ ኮድ -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";        
-        // የርስዎን ትክክለኛ የፋየርቤዝ ማዋቀሪያ (Firebase Config) እዚህ ያስገቡ
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // አዲሶቹ እና ትክክለኞቹ የእርስዎ የፋየርቤዝ መረጃዎች
         const firebaseConfig = {
-  "projectId": "gen-lang-client-0149818830",
-  "appId": "1:506729355314:web:d78d0c2c06150b0691442b",
-  "apiKey": "AIzaSyBwcN00uIfwAhwAs3gUtYXWtISNeUjQ_m0",
-  "authDomain": "gen-lang-client-0149818830.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-fastlocationshar-8b15d88a-199a-4eab-a522-ad42499a180e",
-  "storageBucket": "gen-lang-client-0149818830.firebasestorage.app",
-  "messagingSenderId": "506729355314",
-  "measurementId": "",
-  "oAuthClientId": "506729355314-0uuujeltdcuek2ecofdt53nlpob26nlf.apps.googleusercontent.com",
-  "recaptchaSiteKey": ""
-}
- 
-     const app = initializeApp(firebaseConfig);
+            apiKey: "AIzaSyBwcN00uIfwAhwAs3gUtYXWtISNeUjQ_m0",
+            authDomain: "gen-lang-client-0149818830.firebaseapp.com",
+            projectId: "gen-lang-client-0149818830",
+            storageBucket: "gen-lang-client-0149818830.firebasestorage.app",
+            messagingSenderId: "506729355314",
+            appId: "1:506729355314:web:d78d0c2c06150b0691442b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        // ከቀድሞው የዳታቤዝ መዋቅር ጋር እንዲገናኝ የተደረገ ትክክለኛ ማስተካከያ
         const db = getFirestore(app);
 
         window.sendLocation = async function() {
@@ -66,14 +65,14 @@
 
             sosBtn.style.display = "none";
             loader.style.display = "flex";
-            statusText.innerHTML = "🛰️ <b>እባክዎ ይጠብቁ...</b> ሎኬሽን በመቀበል ላይ ነው።";
+            statusText.innerHTML = "🛰️ <b>እባክዎ ይጠብቁ...</b> ስልክዎ ጂፒኤስ ሎኬሽን በመቀበል ላይ ነው።";
 
             let lat = 0;
             let lon = 0;
             let acc = 0;
-            let locStatus = "GPS_SUCCESS";
+            let locStatus = "EXPERT_GPS_SUCCESS";
 
-            // 1. የጂፒኤስ ጥያቄ (ጊዜውን ወደ 30 ሰከንድ ከፍ አድርገነዋል)
+            // 1. የጂፒኤስ ጥያቄ (እስከ 30 ሰከንድ ድረስ በታጋሽነት እንዲፈልግ የተደረገ)
             const getGPS = () => {
                 return new Promise((resolve, reject) => {
                     if (!navigator.geolocation) {
@@ -95,11 +94,10 @@
                 lon = position.coords.longitude;
                 acc = position.coords.accuracy;
             } catch (gpsError) {
-                console.warn("GPS failed or timed out, switching to Network Fallback...", gpsError);
+                console.warn("GPS failed, switching to fallback...", gpsError);
                 loaderText.innerText = "በኔትወርክ ሎኬሽን በመፈለግ ላይ...";
-                locStatus = "NETWORK_FALLBACK_USED";
+                locStatus = "EXPERT_FALLBACK_USED";
                 
-                // 2. ጂፒኤስ ዘግይቶ ከጠፋ ወይም ብሮውዘሩ ካገደው በ Network/IP አማካኝነት መረጃውን ማግኘት
                 try {
                     const response = await fetch('https://ipapi.co/json/');
                     const ipData = await response.json();
@@ -108,19 +106,19 @@
                         lon = ipData.longitude;
                         acc = 1000;
                     } else {
-                        throw new Error("Network location failed");
+                        throw new Error("Fallback failed");
                     }
                 } catch (netError) {
                     loader.style.display = "none";
-                    sosBtn.style.display = "flex";
+                    sosBtn.style.display = "flex"; // አዝራሩ በምንም መልኩ ተመልሶ እንዲነቃ ይደረጋል
                     statusText.innerHTML = `⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል!</b><br>እባክዎ የብሮውዘርዎን ሴቲንግ (Site Settings -> Location) በመክፈት <b>Allow</b> ያድርጉና ቁልፉን <b>እንደገና ይጫኑ</b>።`;
                     return;
                 }
             }
 
-            // 3. መረጃውን ወደ ፋየርቤዝ በሰኮንዶች ውስጥ መላክ
+            // 2. መረጃውን በቀጥታ ወደ ዋናው ዳታቤዝ ማስተላለፍ
             try {
-                loaderText.innerText = "ወደ ዳታቤዝ በመላክ ላይ...";
+                loaderText.innerText = "ወደ ዋናው ዳታቤዝ በመላክ ላይ...";
                 await addDoc(collection(db, "employee_locations"), {
                     latitude: lat,
                     longitude: lon,
@@ -138,13 +136,7 @@
             } catch (dbError) {
                 console.error("Database Error:", dbError);
                 loader.style.display = "none";
-                sosBtn.style.display = "flex";
-                statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
-            }
-        };
-    </script>
-</body>
-</html>
+                sosBtn.style.display = "flex"; // ስህተት ሲፈጠር አዝራሩ ተመልሶ ሰራተኛው እንዲሞክረው ይደረጋል
                 statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
             }
         };
