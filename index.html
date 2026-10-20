@@ -26,7 +26,7 @@
         <!-- ሎደር -->
         <div id="loader" class="hidden justify-center items-center mb-4">
             <div class="animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent"></div>
-            <span class="ml-3 text-slate-300 text-sm">ሎኬሽን በመፈለግ ላይ...</span>
+            <span id="loader-text" class="ml-3 text-slate-300 text-sm">ጂፒኤስ ሎኬሽን በመፈለግ ላይ...</span>
         </div>
 
         <!-- ስኬታማ መልዕክት -->
@@ -38,8 +38,7 @@
     <!-- Firebase SDK እና የላቀ ሮበስት ሎኬሽን መላኪያ ኮድ -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";        
         // የርስዎን ትክክለኛ የፋየርቤዝ ማዋቀሪያ (Firebase Config) እዚህ ያስገቡ
         const firebaseConfig = {
   "projectId": "gen-lang-client-0149818830",
@@ -60,6 +59,7 @@
         window.sendLocation = async function() {
             const sosBtn = document.getElementById("sos-btn");
             const loader = document.getElementById("loader");
+            const loaderText = document.getElementById("loader-text");
             const statusText = document.getElementById("status-text");
             const successBox = document.getElementById("success-box");
             const iconContainer = document.getElementById("icon-container");
@@ -73,7 +73,7 @@
             let acc = 0;
             let locStatus = "GPS_SUCCESS";
 
-            // 1. መጀመሪያ ጂፒኤስ ለመቀበል መሞከር
+            // 1. የጂፒኤስ ጥያቄ (ጊዜውን ወደ 30 ሰከንድ ከፍ አድርገነዋል)
             const getGPS = () => {
                 return new Promise((resolve, reject) => {
                     if (!navigator.geolocation) {
@@ -83,41 +83,44 @@
                     navigator.geolocation.getCurrentPosition(
                         (pos) => resolve(pos),
                         (err) => reject(err),
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                        { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
                     );
                 });
             };
 
             try {
+                loaderText.innerText = "ከሳተላይት ጂፒኤስ በመቀበል ላይ...";
                 const position = await getGPS();
                 lat = position.coords.latitude;
                 lon = position.coords.longitude;
                 acc = position.coords.accuracy;
             } catch (gpsError) {
-                console.warn("GPS Failed, trying IP fallback...", gpsError);
-                locStatus = "IP_FALLBACK_USED";
+                console.warn("GPS failed or timed out, switching to Network Fallback...", gpsError);
+                loaderText.innerText = "በኔትወርክ ሎኬሽን በመፈለግ ላይ...";
+                locStatus = "NETWORK_FALLBACK_USED";
                 
-                // 2. ጂፒኤስ ካልሰራ በነፃው IP API አማካኝነት ግምታዊ ሎኬሽን ማግኘት
+                // 2. ጂፒኤስ ዘግይቶ ከጠፋ ወይም ብሮውዘሩ ካገደው በ Network/IP አማካኝነት መረጃውን ማግኘት
                 try {
                     const response = await fetch('https://ipapi.co/json/');
                     const ipData = await response.json();
                     if (ipData.latitude && ipData.longitude) {
                         lat = ipData.latitude;
                         lon = ipData.longitude;
-                        acc = 5000; // IP accuracy estimation
+                        acc = 1000;
                     } else {
-                        throw new Error("IP Geolocation failed");
+                        throw new Error("Network location failed");
                     }
-                } catch (ipError) {
+                } catch (netError) {
                     loader.style.display = "none";
                     sosBtn.style.display = "flex";
-                    statusText.innerHTML = `⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል!</b><br>እባክዎ የብሮውዘርዎን ሴቲንግ (Site Settings -> Location) በመክፈት <b>Allow</b> ያድርጉና እንደገና ይጫኑ።`;
+                    statusText.innerHTML = `⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል!</b><br>እባክዎ የብሮውዘርዎን ሴቲንግ (Site Settings -> Location) በመክፈት <b>Allow</b> ያድርጉና ቁልፉን <b>እንደገና ይጫኑ</b>።`;
                     return;
                 }
             }
 
-            // 3. መረጃውን ወደ ፋየርቤዝ መላክ
+            // 3. መረጃውን ወደ ፋየርቤዝ በሰኮንዶች ውስጥ መላክ
             try {
+                loaderText.innerText = "ወደ ዳታቤዝ በመላክ ላይ...";
                 await addDoc(collection(db, "employee_locations"), {
                     latitude: lat,
                     longitude: lon,
@@ -136,6 +139,12 @@
                 console.error("Database Error:", dbError);
                 loader.style.display = "none";
                 sosBtn.style.display = "flex";
+                statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
+            }
+        };
+    </script>
+</body>
+</html>
                 statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
             }
         };
