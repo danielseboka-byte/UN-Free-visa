@@ -8,47 +8,75 @@
 <style>
   :root{--g:#059669;--r:#dc2626;--y:#d97706;--bg:#f1f5f9;--ink:#0f172a;--mut:#64748b}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{margin:0;font-family:system-ui,"Noto Sans Ethiopic",sans-serif;background:var(--bg);color:var(--ink);
-       min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 16px 40px}
+  html,body{height:100%}
+  body{margin:0;font-family:system-ui,"Noto Sans Ethiopic",sans-serif;background:var(--bg);color:var(--ink)}
+
+  /* ===== የግዴታ ማያ (gate) ===== */
+  #gate{position:fixed;inset:0;background:var(--g);color:#fff;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;padding:24px;text-align:center;z-index:999}
+  #gate.bad{background:var(--r)}
+  #gate h2{font-size:22px;margin:0 0 10px}
+  #gate p{font-size:15px;opacity:.95;line-height:1.6;max-width:360px;margin:0 0 26px}
+  #gateBtn{width:220px;height:220px;border-radius:50%;border:0;background:#fff;color:var(--g);
+           font-size:22px;font-weight:800;box-shadow:0 0 0 0 #ffffff66;cursor:pointer}
+  #gateBtn.pulsing{animation:p 1.6s infinite}
+  @keyframes p{70%{box-shadow:0 0 0 30px #ffffff00}100%{box-shadow:0 0 0 0 #ffffff00}}
+  .help{display:none;text-align:left;background:#fff2;border-radius:12px;padding:14px;font-size:13.5px;
+        line-height:1.7;margin-top:18px;max-width:360px}
+  .help b{display:block;margin-bottom:4px}
+  #retryBtn{margin-top:16px;padding:12px 22px;border:0;border-radius:12px;background:#fff;color:var(--r);
+            font-weight:800;font-size:15px}
+  #inappBox{display:none;background:#fff2;border-radius:12px;padding:14px;font-size:13.5px;line-height:1.7;max-width:360px;margin-top:10px}
+  #inappBox a{display:inline-block;margin-top:8px;padding:10px 16px;border-radius:10px;background:#fff;color:var(--r);font-weight:800;text-decoration:none}
+
+  /* ===== ዋና ገጽ ===== */
+  #app{display:none;min-height:100%;flex-direction:column;align-items:center;padding:20px 16px 40px}
   h1{font-size:20px;margin:8px 0 2px}
   .sub{color:var(--mut);font-size:14px;margin-bottom:16px;text-align:center}
   .card{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:440px;box-shadow:0 4px 18px #0001;text-align:center}
-  .pulse{width:150px;height:150px;border-radius:50%;margin:6px auto 16px;border:0;color:#fff;font-size:18px;font-weight:700;
-         background:var(--g);box-shadow:0 0 0 0 #05966988;cursor:pointer}
-  .pulse.on{animation:p 1.6s infinite}.pulse.bad{background:var(--r)}.pulse.wait{background:var(--y)}
-  @keyframes p{70%{box-shadow:0 0 0 28px #0000}100%{box-shadow:0 0 0 0 #0000}}
+  .pulse{width:140px;height:140px;border-radius:50%;margin:6px auto 16px;border:0;color:#fff;font-size:17px;font-weight:700;background:var(--g)}
+  .pulse.on{animation:p2 1.6s infinite}.pulse.wait{background:var(--y)}.pulse.bad{background:var(--r)}
+  @keyframes p2{70%{box-shadow:0 0 0 26px #05966900}100%{box-shadow:0 0 0 0 #05966900}}
   #status{font-weight:700;font-size:17px;margin-bottom:6px}
   #detail{color:var(--mut);font-size:14px;line-height:1.5;min-height:40px}
   .row{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);padding:8px 0;border-top:1px solid #e2e8f0}
   .row b{color:var(--ink)}
-  .sos{width:100%;margin-top:14px;padding:14px;border:0;border-radius:14px;background:var(--r);color:#fff;font-size:17px;font-weight:700}
-  .box{display:none;text-align:left;border-radius:12px;padding:12px;font-size:13.5px;line-height:1.6;margin:10px 0}
-  #help{background:#fef3c7}#inapp{background:#fee2e2}
-  .box a,.box button{display:inline-block;margin-top:6px;padding:9px 14px;border:0;border-radius:10px;background:var(--g);color:#fff;font-weight:700;text-decoration:none;font-size:14px}
+  .sos{width:100%;margin-top:14px;padding:16px;border:0;border-radius:14px;background:var(--r);color:#fff;font-size:18px;font-weight:800}
   input{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:12px;font-size:15px;margin-top:12px}
 </style>
 </head>
 <body>
-<h1>📍 ፈጣን የቦታ ማጋሪያ</h1>
-<div class="sub" id="who">ሰራተኛ</div>
 
-<div class="card">
-  <button class="pulse wait" id="big">በመጀመር ላይ…</button>
-  <div id="status">በመጀመር ላይ…</div>
-  <div id="detail"></div>
-
-  <div class="box" id="inapp">
-    <b>⚠️ ይህ ሊንክ በመልዕክት አፕ ውስጥ ተከፍቷል።</b><br>በዚህ ውስጥ ሎኬሽን አይሰራም። በ Chrome ይክፈቱ፦<br>
+<!-- ===== STEP 1: የግዴታ ማያ — ይህ ሳይነካ ገጹ ውስጥ መግባት አይቻልም ===== -->
+<div id="gate">
+  <div id="gateInner">
+    <h2>📍 ከመቀጠልዎ በፊት</h2>
+    <p>ደህንነትዎን ለመጠበቅ ሎኬሽንዎን ማጋራት ያስፈልጋል። ከታች ያለውን ክብ አንድ ጊዜ ብቻ ይንኩ፤ ቀጥታ ይጀምራል።</p>
+    <button id="gateBtn" class="pulsing">👇<br>ይንኩ<br>ሎኬሽን ያብሩ</button>
+    <div class="help" id="help"></div>
+    <button id="retryBtn" style="display:none">🔄 እንደገና ሞክር</button>
+  </div>
+  <div id="inappBox">
+    <b>⚠️ ይህ በመልዕክት መተግበሪያ ውስጥ ተከፍቷል፤ እዚህ ሎኬሽን አይሰራም።</b>
+    እባክዎ ከታች ያለውን ይንኩ፦
     <a id="chromeLink" href="#">Chrome ውስጥ ክፈት</a>
   </div>
-  <div class="box" id="help"></div>
+</div>
 
-  <div class="row"><span>የመጨረሻ ላክ</span><b id="last">—</b></div>
-  <div class="row"><span>ትክክለኛነት</span><b id="acc">—</b></div>
-  <div class="row"><span>ግንኙነት</span><b id="net">—</b></div>
-
-  <input id="nameIn" placeholder="ስምዎ (አማራጭ)" autocomplete="name">
-  <button class="sos" id="sos">🚨 አደጋ ላይ ነኝ (SOS)</button>
+<!-- ===== STEP 2: ፈቃድ ከተሰጠ በኋላ ብቻ የሚታይ ገጽ ===== -->
+<div id="app">
+  <h1>📍 ፈጣን የቦታ ማጋሪያ</h1>
+  <div class="sub" id="who">ሰራተኛ</div>
+  <div class="card">
+    <button class="pulse wait" id="big">ቀጥታ ላይ</button>
+    <div id="status">በመላክ ላይ…</div>
+    <div id="detail"></div>
+    <div class="row"><span>የመጨረሻ ላክ</span><b id="last">—</b></div>
+    <div class="row"><span>ትክክለኛነት</span><b id="acc">—</b></div>
+    <div class="row"><span>ግንኙነት</span><b id="net">—</b></div>
+    <input id="nameIn" placeholder="ስምዎ (አማራጭ)" autocomplete="name">
+    <button class="sos" id="sos">🚨 አደጋ ላይ ነኝ (SOS)</button>
+  </div>
 </div>
 
 <script type="module">
@@ -66,11 +94,9 @@ const firebaseConfig = {
   messagingSenderId: "506729355314"
 };
 const DATABASE_ID = "ai-studio-fastlocationshar-8b15d88a-199a-4eab-a522-ad42499a180e";
-const COLLECTION  = "locations";   // ዋናው አፕ የሚያነበው
-const SEND_MS     = 10000;         // ቢያንስ በየ10 ሰከንድ
-const HEARTBEAT   = 15000;         // ቦታ ባይቀየርም በየ15 ሰከንድ ያድሳል
-const RETRY_MS    = 4000;
-const IP_FALLBACK_AFTER = 12000;   // GPS ካልተገኘ ከ12 ሰከንድ በኋላ በግምት (IP) ቦታ ይልካል
+const COLLECTION  = "locations";
+const SEND_MS     = 10000;
+const HEARTBEAT   = 15000;
 /* ================================================ */
 
 const $ = id => document.getElementById(id);
@@ -78,14 +104,9 @@ const LS = { g:k=>{try{return localStorage.getItem(k)}catch{return null}}, s:(k,
 const qs = new URLSearchParams(location.search);
 
 let name = qs.get("name") || LS.g("wname") || "";
-$("nameIn").value = name;
-$("who").textContent = "ሰራተኛ: " + (name || "ስም አልተሰጠም");
-$("nameIn").addEventListener("change", e => { name = e.target.value.trim(); LS.s("wname", name); $("who").textContent = "ሰራተኛ: " + (name || "ስም አልተሰጠም"); });
-if (name) LS.s("wname", name);
-
 let wid = LS.g("wid"); if (!wid) { wid = Math.random().toString(36).slice(2,10); LS.s("wid", wid); }
 const day = new Date().toISOString().slice(0,10).replace(/-/g,"");
-const DOC_ID = `live_${wid}_${day}`;     // በቀን አንድ ሰነድ፤ ቀጥታ ይታደሳል
+const DOC_ID = `live_${wid}_${day}`;
 
 const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, {
@@ -94,114 +115,126 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
 }, DATABASE_ID);
 
-let watchId=null, last=null, lastSent=0, gotFix=false, retryT=null, ipT=null, wake=null, sosOn=false, started=false;
+let watchId=null, last=null, lastSent=0, wake=null, sosOn=false, unlocked=false;
 
-const stamp = (ip) => new Date().toLocaleString("en-US",{year:"numeric",month:"2-digit",day:"2-digit",
-  hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true}) + (ip ? " (IP)" : "");
-
-function ui(state, s, d){
-  const b=$("big"); b.className="pulse "+(state==="on"?"on":state==="bad"?"bad":"wait");
-  b.textContent = state==="on" ? "ቀጥታ ላይ" : state==="bad" ? "አብራ" : "እየጠበቀ…";
-  $("status").textContent=s; $("detail").textContent=d||"";
-}
-function help(on, html){ const h=$("help"); h.style.display=on?"block":"none"; if(on) h.innerHTML=html; }
-const HELP_DENIED = "<b>ሎኬሽን ለዚህ ድረ-ገጽ ተከልክሏል።</b><br>1. ከአድራሻ አሞሌው ግራ 🔒 (ወይም ⚙) ይንኩ<br>2. «Permissions / ፈቃዶች» → «Location / አካባቢ» → <b>Allow</b><br>3. ወደዚህ ገጽ ይመለሱ — ራሱ ይቀጥላል።<br>በስልኩ የ Location (GPS) መቀየሪያም መብራቱን ያረጋግጡ።";
+const stamp = () => new Date().toLocaleString("en-US",{year:"numeric",month:"2-digit",day:"2-digit",
+  hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true});
 const upNet=()=>{ $("net").textContent = navigator.onLine ? "✅ ኦንላይን" : "⚠️ ኦፍላይን (ተቀምጦ ይላካል)"; };
 
-// ===== መፃፍ (ከዋናው አፕ schema ጋር ተመሳሳይ: employeeName, lat, lon, timestamp, mapUrl, createdAt) =====
-function payload(lat, lon, acc, isIp){
+function payload(lat, lon, acc){
   return {
     employeeName: (sosOn ? "🚨 SOS - " : "") + (name || "Anonymous Employee"),
     lat, lon,
-    timestamp: stamp(isIp),
+    timestamp: stamp(),
     mapUrl: `https://www.google.com/maps?q=${lat},${lon}`,
     createdAt: new Date().toISOString(),
     accuracy: acc ?? null,
-    source: isIp ? "ip" : "gps",
     sos: sosOn,
     workerId: wid
   };
 }
-async function send(lat, lon, acc, isIp, force){
+async function send(lat, lon, acc, force){
   const now=Date.now();
   if(!force && now-lastSent < SEND_MS) return;
   lastSent=now;
   try{
-    await setDoc(doc(db, COLLECTION, DOC_ID), payload(lat,lon,acc,isIp), { merge:true });
+    await setDoc(doc(db, COLLECTION, DOC_ID), payload(lat,lon,acc), { merge:true });
     $("last").textContent = new Date().toLocaleTimeString();
-    $("acc").textContent = acc ? (isIp ? "≈ከተማ (IP)" : Math.round(acc)+" ሜ") : "—";
+    $("acc").textContent = acc ? Math.round(acc)+" ሜ" : "—";
   }catch(e){ console.error(e); $("detail").textContent="መላክ አልተሳካም፤ እንደገና ይሞክራል… ("+(e.code||e.message)+")"; }
 }
 
-// ===== GPS =====
 function onPos(p){
-  gotFix=true; last={lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
-  clearTimeout(retryT); clearTimeout(ipT); help(false); $("inapp").style.display="none";
-  ui("on","✅ ሎኬሽን እየተጋራ ነው","ገጹን ክፍት ያድርጉ። ከወጡ ተመልሰው ሲገቡ ራሱ ይቀጥላል።");
-  send(last.lat,last.lon,last.acc,false,false);
+  last={lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
+  $("big").className="pulse on"; $("big").textContent="ቀጥታ ላይ";
+  $("status").textContent="✅ ሎኬሽን እየተጋራ ነው";
+  $("detail").textContent="ገጹን ክፍት ያድርጉ። ከወጡ ተመልሰው ሲገቡ ራሱ ይቀጥላል።";
+  send(last.lat,last.lon,last.acc,false);
 }
 function onErr(e){
-  if(e.code===1){ ui("bad","❌ ሎኬሽን አልበራም","ፈቃድ ይስጡ ወይም GPS ያብሩ።"); help(true, HELP_DENIED); armIp(0); }
-  else { ui("wait","⏳ GPS እየፈለገ ነው…","ክፍት ቦታ ይሂዱ፤ ቀጥሎ ይሞክራል።"); armIp(IP_FALLBACK_AFTER); }
-  stopWatch(); clearTimeout(retryT); retryT=setTimeout(startWatch, RETRY_MS);
+  $("big").className="pulse wait"; $("status").textContent="⏳ GPS እየፈለገ ነው…";
+  $("detail").textContent="ክፍት ቦታ ይሂዱ፤ ራሱ ይቀጥላል።";
 }
 function startWatch(){
-  if(!navigator.geolocation){ ui("bad","አሳሽዎ ሎኬሽን አይደግፍም","Chrome ይጠቀሙ።"); armIp(0); return; }
-  stopWatch();
+  if(!navigator.geolocation) return;
+  if(watchId!==null) navigator.geolocation.clearWatch(watchId);
   watchId = navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
   wakeLock();
 }
-function stopWatch(){ if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; } }
 async function wakeLock(){ try{ if("wakeLock" in navigator && !wake){ wake=await navigator.wakeLock.request("screen"); wake.addEventListener("release",()=>wake=null);} }catch{} }
 
-// ===== GPS ካልተገኘ በግምት (IP) ቦታ ይልካል =====
-function armIp(ms){ if(gotFix || ipT) return; ipT=setTimeout(async()=>{ ipT=null; if(gotFix) return; await ipLocation(); }, ms); }
-async function ipLocation(){
-  const tries=[ async()=>{const r=await (await fetch("https://ipwho.is/")).json(); return r.success?[r.latitude,r.longitude]:null;},
-                async()=>{const r=await (await fetch("https://ipapi.co/json/")).json(); return typeof r.latitude==="number"?[r.latitude,r.longitude]:null;} ];
-  for(const t of tries){ try{ const c=await t(); if(c){ last={lat:c[0],lon:c[1],acc:1000,ip:true};
-        await send(c[0],c[1],1000,true,true);
-        if(!gotFix) $("detail").textContent="⚠️ ትክክለኛ GPS የለም፤ በግምት ቦታዎ ተልኳል። GPS እስኪበራ መሞከር ይቀጥላል።"; return; } }catch{} }
-}
-
-// heartbeat
-setInterval(()=>{ if(last) send(last.lat,last.lon,last.acc,!!last.ip && !gotFix,true); }, HEARTBEAT);
-
-// መመለስ/ኔት/ፈቃድ ሲቀየር ራሱ ይቀጥላል
-const resume=()=>{ upNet(); startWatch(); };
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") resume(); });
-window.addEventListener("pageshow",resume); window.addEventListener("focus",resume);
-window.addEventListener("online",()=>{ resume(); if(last) send(last.lat,last.lon,last.acc,false,true); });
+setInterval(()=>{ if(unlocked && last) send(last.lat,last.lon,last.acc,true); }, HEARTBEAT);
+document.addEventListener("visibilitychange",()=>{ if(unlocked && document.visibilityState==="visible"){ upNet(); startWatch(); } });
+window.addEventListener("pageshow",()=>{ if(unlocked){ upNet(); startWatch(); } });
+window.addEventListener("focus",()=>{ if(unlocked){ upNet(); startWatch(); } });
+window.addEventListener("online",()=>{ upNet(); if(unlocked){ startWatch(); if(last) send(last.lat,last.lon,last.acc,true); } });
 window.addEventListener("offline",upNet);
-navigator.permissions?.query({name:"geolocation"}).then(p=>{ p.onchange=()=>{ if(p.state!=="denied"){ help(false); startWatch(); } }; }).catch(()=>{});
 
-// ማንኛውም ንክኪ ፈቃድ እንደገና ይጠይቃል (user gesture)
-const gesture=()=>{ navigator.geolocation?.getCurrentPosition(onPos,onErr,{enableHighAccuracy:true,timeout:15000}); startWatch(); };
-$("big").addEventListener("click",gesture);
-document.body.addEventListener("touchstart",()=>{ if(!gotFix && !started){ started=true; gesture(); } },{once:true,passive:true});
+$("nameIn").addEventListener("change", e => { name=e.target.value.trim(); LS.s("wname",name); $("who").textContent="ሰራተኛ: "+(name||"ስም አልተሰጠም"); });
 
-// SOS
 $("sos").addEventListener("click", async ()=>{
   sosOn=true;
-  const c = last || {lat:null,lon:null};
-  try{
-    await addDoc(collection(db, COLLECTION), { ...payload(c.lat??0, c.lon??0, last?.acc, !!last?.ip && !gotFix), employeeName:"🚨 SOS - "+(name||"Anonymous Employee") });
-    if(last) await send(last.lat,last.lon,last.acc,false,true);
-    alert("🚨 የአደጋ ጥሪ ተልኳል።");
-  }catch(e){ alert("ጥሪው ተቀምጧል፤ ኔትወርክ ሲመለስ ይላካል።"); }
+  $("detail").textContent="🚨 የአደጋ ጥሪ እየተላከ ነው…";
+  const finishSos = async (lat,lon,acc)=>{
+    try{
+      await addDoc(collection(db, COLLECTION), payload(lat,lon,acc));
+      await send(lat,lon,acc,true);
+      alert("🚨 የአደጋ ጥሪ ተልኳል።");
+    }catch(e){ alert("ጥሪው ተቀምጧል፤ ኔትወርክ ሲመለስ ይላካል።"); }
+  };
+  if(last){ finishSos(last.lat,last.lon,last.acc); }
+  else {
+    navigator.geolocation.getCurrentPosition(
+      p=>finishSos(p.coords.latitude,p.coords.longitude,p.coords.accuracy),
+      ()=>{ alert("⚠️ ቦታ ገና አልተገኘም። ትንሽ ይጠብቁና እንደገና ይሞክሩ፣ ወይም ወደ ክፍት ቦታ ይሂዱ።"); },
+      {enableHighAccuracy:true, timeout:10000}
+    );
+  }
 });
 
-// በመልዕክት አፕ (Telegram/Facebook…) ውስጥ ከተከፈተ Chrome ውስጥ እንዲከፈት
+/* ===== In-app browser detection (Telegram/FB/IG ወዘተ) ===== */
 const ua=navigator.userAgent;
-if(/FBAN|FBAV|Instagram|Telegram|Line\/|Snapchat|TikTok|; wv\)/i.test(ua) && /Android/i.test(ua)){
-  $("inapp").style.display="block";
+const inApp = /FBAN|FBAV|Instagram|Telegram|Line\/|Snapchat|TikTok|; wv\)/i.test(ua) && /Android/i.test(ua);
+if(inApp){
+  $("inappBox").style.display="block";
+  $("gateInner").style.display="none";
   $("chromeLink").href = "intent://"+location.host+location.pathname+location.search+"#Intent;scheme=https;package=com.android.chrome;end";
 }
 
-// ===== ጅምር: ምንም ንክኪ ሳይጠብቅ ወዲያው =====
-upNet();
-startWatch();
-armIp(IP_FALLBACK_AFTER);
+/* =========================================================
+   STEP 1: GATE — ፈቃዱ የሚጠየቀው ልክ በዚህ ንክኪ ውስጥ ብቻ ነው (synchronous click → getCurrentPosition)።
+   ይህ በ Chrome ውስጥ ፈቃዱ በትክክል እንዲከፈት ያስፈልጋል — delay ወይም await ከፊት ቢቀመጥ Chrome ይከለክለዋል።
+   ========================================================= */
+function openApp(){
+  unlocked = true;
+  $("gate").style.display="none";
+  $("app").style.display="flex";
+  $("who").textContent="ሰራተኛ: "+(name||"ስም አልተሰጠም");
+  $("nameIn").value = name;
+  upNet();
+  startWatch();
+}
+function onGateSuccess(p){
+  onPos(p);
+  openApp();
+}
+function onGateError(err){
+  $("gateBtn").classList.remove("pulsing");
+  $("gateBtn").textContent = "🔄 እንደገና ይንኩ";
+  $("gate").classList.add("bad");
+  const h = $("help");
+  h.style.display="block";
+  if(err.code===1){
+    h.innerHTML = "<b>❌ ሎኬሽን ተከልክሏል።</b>1. ከአድራሻ አሞሌው ግራ 🔒 (ወይም ⚙) ይንኩ<br>2. «Permissions / ፈቃዶች» → «Location / አካባቢ» → <b>Allow</b><br>3. ይህን ገጽ እንደገና ይክፈቱ፤ ራሱ ይቀጥላል።<br>በስልኩ ቅንብርም GPS መብራቱን ያረጋግጡ።";
+  } else {
+    h.innerHTML = "<b>⏳ ቦታ ማግኘት አልተቻለም።</b>ክፍት ቦታ ይሂዱ ወይም GPS ያብሩና እንደገና ይሞክሩ።";
+  }
+}
+$("gateBtn").addEventListener("click", function(){
+  if(!navigator.geolocation){ onGateError({code:2}); return; }
+  // ይህ ጥሪ በቀጥታ በንክኪው ውስጥ ነው የሚላከው — Chrome ፈቃድ prompt በትክክል እንዲያሳይ ይህ ወሳኝ ነው
+  navigator.geolocation.getCurrentPosition(onGateSuccess, onGateError, {enableHighAccuracy:true, timeout:15000});
+});
 </script>
 </body>
 </html>
