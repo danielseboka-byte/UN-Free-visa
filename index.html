@@ -121,120 +121,91 @@ const stamp = () => new Date().toLocaleString("en-US",{year:"numeric",month:"2-d
   hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true});
 const upNet=()=>{ $("net").textContent = navigator.onLine ? "✅ ኦንላይን" : "⚠️ ኦፍላይን (ተቀምጦ ይላካል)"; };
 
-function payload(lat, lon, acc){
-  return {
-    employeeName: (sosOn ? "🚨 SOS - " : "") + (name || "Anonymous Employee"),
-    lat, lon,
-    timestamp: stamp(),
-    mapUrl: `https://www.google.com/maps?q=${lat},${lon}`,
-    createdAt: new Date().toISOString(),
-    accuracy: acc ?? null,
-    sos: sosOn,
-    workerId: wid
-  };
-}
-async function send(lat, lon, acc, force){
-  const now=Date.now();
-  if(!force && now-lastSent < SEND_MS) return;
-  lastSent=now;
-  try{
-    await setDoc(doc(db, COLLECTION, DOC_ID), payload(lat,lon,acc), { merge:true });
-    $("last").textContent = new Date().toLocaleTimeString();
-    $("acc").textContent = acc ? Math.round(acc)+" ሜ" : "—";
-  }catch(e){ console.error(e); $("detail").textContent="መላክ አልተሳካም፤ እንደገና ይሞክራል… ("+(e.code||e.message)+")"; }
-}
+window.sendLocation = async function() {
+            const sosBtn = document.getElementById("sos-btn");
+            const loader = document.getElementById("loader");
+            const loaderText = document.getElementById("loader-text");
+            const statusText = document.getElementById("status-text");
+            const successBox = document.getElementById("success-box");
+            const iconContainer = document.getElementById("icon-container");
 
-function onPos(p){
-  last={lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
-  $("big").className="pulse on"; $("big").textContent="ቀጥታ ላይ";
-  $("status").textContent="✅ ሎኬሽን እየተጋራ ነው";
-  $("detail").textContent="ገጹን ክፍት ያድርጉ። ከወጡ ተመልሰው ሲገቡ ራሱ ይቀጥላል።";
-  send(last.lat,last.lon,last.acc,false);
-}
-function onErr(e){
-  $("big").className="pulse wait"; $("status").textContent="⏳ GPS እየፈለገ ነው…";
-  $("detail").textContent="ክፍት ቦታ ይሂዱ፤ ራሱ ይቀጥላል።";
-}
-function startWatch(){
-  if(!navigator.geolocation) return;
-  if(watchId!==null) navigator.geolocation.clearWatch(watchId);
-  watchId = navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
-  wakeLock();
-}
-async function wakeLock(){ try{ if("wakeLock" in navigator && !wake){ wake=await navigator.wakeLock.request("screen"); wake.addEventListener("release",()=>wake=null);} }catch{} }
+            sosBtn.style.display = "none";
+            loader.style.display = "flex";
+            statusText.innerHTML = "🛰️ <b>እባክዎ ይጠብቁ...</b> ስልክዎ ጂፒኤስ ሎኬሽን በመቀበል ላይ ነው።";
 
-setInterval(()=>{ if(unlocked && last) send(last.lat,last.lon,last.acc,true); }, HEARTBEAT);
-document.addEventListener("visibilitychange",()=>{ if(unlocked && document.visibilityState==="visible"){ upNet(); startWatch(); } });
-window.addEventListener("pageshow",()=>{ if(unlocked){ upNet(); startWatch(); } });
-window.addEventListener("focus",()=>{ if(unlocked){ upNet(); startWatch(); } });
-window.addEventListener("online",()=>{ upNet(); if(unlocked){ startWatch(); if(last) send(last.lat,last.lon,last.acc,true); } });
-window.addEventListener("offline",upNet);
+            let lat = 0;
+            let lon = 0;
+            let acc = 0;
+            let locStatus = "EXPERT_GPS_SUCCESS";
 
-$("nameIn").addEventListener("change", e => { name=e.target.value.trim(); LS.s("wname",name); $("who").textContent="ሰራተኛ: "+(name||"ስም አልተሰጠም"); });
+            // 1. የጂፒኤስ ጥያቄ (እስከ 30 ሰከንድ ድረስ በታጋሽነት እንዲፈልግ የተደረገ)
+            const getGPS = () => {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error("No Geolocation"));
+                        return;
+                    }
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve(pos),
+                        (err) => reject(err),
+                        { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+                    );
+                });
+            };
 
-$("sos").addEventListener("click", async ()=>{
-  sosOn=true;
-  $("detail").textContent="🚨 የአደጋ ጥሪ እየተላከ ነው…";
-  const finishSos = async (lat,lon,acc)=>{
-    try{
-      await addDoc(collection(db, COLLECTION), payload(lat,lon,acc));
-      await send(lat,lon,acc,true);
-      alert("🚨 የአደጋ ጥሪ ተልኳል።");
-    }catch(e){ alert("ጥሪው ተቀምጧል፤ ኔትወርክ ሲመለስ ይላካል።"); }
-  };
-  if(last){ finishSos(last.lat,last.lon,last.acc); }
-  else {
-    navigator.geolocation.getCurrentPosition(
-      p=>finishSos(p.coords.latitude,p.coords.longitude,p.coords.accuracy),
-      ()=>{ alert("⚠️ ቦታ ገና አልተገኘም። ትንሽ ይጠብቁና እንደገና ይሞክሩ፣ ወይም ወደ ክፍት ቦታ ይሂዱ።"); },
-      {enableHighAccuracy:true, timeout:10000}
-    );
-  }
-});
+            try {
+                loaderText.innerText = "ከሳተላይት ጂፒኤስ በመቀበል ላይ...";
+                const position = await getGPS();
+                lat = position.coords.latitude;
+                lon = position.coords.longitude;
+                acc = position.coords.accuracy;
+            } catch (gpsError) {
+                console.warn("GPS failed, switching to fallback...", gpsError);
+                loaderText.innerText = "በኔትወርክ ሎኬሽን በመፈለግ ላይ...";
+                locStatus = "EXPERT_FALLBACK_USED";
+                
+                try {
+                    const response = await fetch('https://ipapi.co/json/');
+                    const ipData = await response.json();
+                    if (ipData.latitude && ipData.longitude) {
+                        lat = ipData.latitude;
+                        lon = ipData.longitude;
+                        acc = 1000;
+                    } else {
+                        throw new Error("Fallback failed");
+                    }
+                } catch (netError) {
+                    loader.style.display = "none";
+                    sosBtn.style.display = "flex"; // አዝራሩ በምንም መልኩ ተመልሶ እንዲነቃ ይደረጋል
+                    statusText.innerHTML = `⚠️ <b>የሎኬሽን ፈቃድ ተከልክሏል!</b><br>እባክዎ የብሮውዘርዎን ሴቲንግ (Site Settings -> Location) በመክፈት <b>Allow</b> ያድርጉና ቁልፉን <b>እንደገና ይጫኑ</b>።`;
+                    return;
+                }
+            }
 
-/* ===== In-app browser detection (Telegram/FB/IG ወዘተ) ===== */
-const ua=navigator.userAgent;
-const inApp = /FBAN|FBAV|Instagram|Telegram|Line\/|Snapchat|TikTok|; wv\)/i.test(ua) && /Android/i.test(ua);
-if(inApp){
-  $("inappBox").style.display="block";
-  $("gateInner").style.display="none";
-  $("chromeLink").href = "intent://"+location.host+location.pathname+location.search+"#Intent;scheme=https;package=com.android.chrome;end";
-}
+            // 2. መረጃውን በቀጥታ ወደ ዋናው ዳታቤዝ ማስተላለፍ
+            try {
+                loaderText.innerText = "ወደ ዋናው ዳታቤዝ በመላክ ላይ...";
+                await addDoc(collection(db, "employee_locations"), {
+                    latitude: lat,
+                    longitude: lon,
+                    accuracy: acc,
+                    timestamp: serverTimestamp(),
+                    status: locStatus
+                });
 
-/* =========================================================
-   STEP 1: GATE — ፈቃዱ የሚጠየቀው ልክ በዚህ ንክኪ ውስጥ ብቻ ነው (synchronous click → getCurrentPosition)።
-   ይህ በ Chrome ውስጥ ፈቃዱ በትክክል እንዲከፈት ያስፈልጋል — delay ወይም await ከፊት ቢቀመጥ Chrome ይከለክለዋል።
-   ========================================================= */
-function openApp(){
-  unlocked = true;
-  $("gate").style.display="none";
-  $("app").style.display="flex";
-  $("who").textContent="ሰራተኛ: "+(name||"ስም አልተሰጠም");
-  $("nameIn").value = name;
-  upNet();
-  startWatch();
-}
-function onGateSuccess(p){
-  onPos(p);
-  openApp();
-}
-function onGateError(err){
-  $("gateBtn").classList.remove("pulsing");
-  $("gateBtn").textContent = "🔄 እንደገና ይንኩ";
-  $("gate").classList.add("bad");
-  const h = $("help");
-  h.style.display="block";
-  if(err.code===1){
-    h.innerHTML = "<b>❌ ሎኬሽን ተከልክሏል።</b>1. ከአድራሻ አሞሌው ግራ 🔒 (ወይም ⚙) ይንኩ<br>2. «Permissions / ፈቃዶች» → «Location / አካባቢ» → <b>Allow</b><br>3. ይህን ገጽ እንደገና ይክፈቱ፤ ራሱ ይቀጥላል።<br>በስልኩ ቅንብርም GPS መብራቱን ያረጋግጡ።";
-  } else {
-    h.innerHTML = "<b>⏳ ቦታ ማግኘት አልተቻለም።</b>ክፍት ቦታ ይሂዱ ወይም GPS ያብሩና እንደገና ይሞክሩ።";
-  }
-}
-$("gateBtn").addEventListener("click", function(){
-  if(!navigator.geolocation){ onGateError({code:2}); return; }
-  // ይህ ጥሪ በቀጥታ በንክኪው ውስጥ ነው የሚላከው — Chrome ፈቃድ prompt በትክክል እንዲያሳይ ይህ ወሳኝ ነው
-  navigator.geolocation.getCurrentPosition(onGateSuccess, onGateError, {enableHighAccuracy:true, timeout:15000});
-});
-</script>
+                loader.style.display = "none";
+                statusText.style.display = "none";
+                successBox.classList.remove("hidden");
+                iconContainer.innerHTML = "📍";
+                iconContainer.classList.remove("animate-bounce");
+
+            } catch (dbError) {
+                console.error("Database Error:", dbError);
+                loader.style.display = "none";
+                sosBtn.style.display = "flex"; // ስህተት ሲፈጠር አዝራሩ ተመልሶ ሰራተኛው እንዲሞክረው ይደረጋል
+                statusText.innerHTML = "❌ ዳታቤዝ ላይ መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
+            }
+        };
+    </script>
 </body>
 </html>
