@@ -202,8 +202,10 @@ if(inApp){
 }
 
 /* =========================================================
-   STEP 1: GATE — ፈቃዱ የሚጠየቀው ልክ በዚህ ንክኪ ውስጥ ብቻ ነው (synchronous click → getCurrentPosition)።
-   ይህ በ Chrome ውስጥ ፈቃዱ በትክክል እንዲከፈት ያስፈልጋል — delay ወይም await ከፊት ቢቀመጥ Chrome ይከለክለዋል።
+   STEP 1: GATE
+   ፈቃድ ቀድሞ "granted" ከሆነ (ቀድሞ አንድ ጊዜ ተፈቅዶ ከሆነ)፣ ምንም ንክኪ ሳያስፈልግ
+   በገጽ መክፈቻው ቅጽበት ራሱ በራስ-ሰር ይጀምራል — ይህ ነው ለድንገተኛ ጊዜ የሚያስፈልገው እውነተኛ "አንድ ጊዜ ብቻ" ተሞክሮ።
+   ፈቃድ ገና "prompt" ወይም "denied" ከሆነ ብቻ የግዴታ ክብ ይታያል (የመጀመሪያ ማዋቀሪያ፣ አንድ ጊዜ ብቻ)።
    ========================================================= */
 function openApp(){
   unlocked = true;
@@ -218,6 +220,21 @@ function onGateSuccess(p){
   onPos(p);
   openApp();
 }
+
+async function tryAutoStart(){
+  if(inApp) return false; // in-app browser ውስጥ ሁልጊዜ ሊንክ መቀየሪያ ያስፈልጋል
+  try{
+    if(!navigator.permissions || !navigator.permissions.query) return false;
+    const status = await navigator.permissions.query({name:"geolocation"});
+    if(status.state === "granted"){
+      // ፈቃድ ቀድሞ ተሰጥቷል → ምንም ንክኪ ሳያስፈልግ ወዲያውኑ ጀምር
+      navigator.geolocation.getCurrentPosition(onGateSuccess, onGateError, {enableHighAccuracy:true, timeout:15000});
+      return true;
+    }
+  }catch(e){ /* Permissions API ያልተደገፈ ከሆነ ወደ መደበኛ ክብ ንክኪ እንመለሳለን */ }
+  return false;
+}
+tryAutoStart();
 function onGateError(err){
   $("gateBtn").classList.remove("pulsing");
   $("gateBtn").textContent = "🔄 እንደገና ይንኩ";
