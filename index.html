@@ -48,17 +48,20 @@
 <body>
 
 <!-- ===== STEP 1: የግዴታ ማያ — ይህ ሳይነካ ገጹ ውስጥ መግባት አይቻልም ===== -->
-<div id="inappBox" style="margin-top: 15px; padding: 15px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; text-align: center;">
-    <b style="color: #f87171; display: block; margin-bottom: 8px;">⚠️ እባክዎ ትክክለኛውን ብሮውዘር ይጠቀሙ!</b>
-    <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">
-        ይህንን ሊንክ ሙሉ በሙሉ ለመጠቀም እና ጂፒኤስ ለማብራት ከታች ያለውን ቁልፍ በመጫን በስልክዎ ዋና ብሮውዘር (Chrome ወይም Samsung Internet) ይክፈቱት።
-    </p>
-    <!-- በየትኛውም ብሮውዘር ውስጥ ሆነው ወደ ውጭ አሳሽ ለመክፈት የሚያስችል አዝራር -->
-    <a id="browserLink" href="#" target="_blank" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; text-decoration: none; font-size: 14px;">
-        🌐 በስልክዎ ብሮውዘር ውስጥ ክፈት
-    </a>
+<div id="gate">
+  <div id="gateInner">
+    <h2>📍 ከመቀጠልዎ በፊት</h2>
+    <p>ደህንነትዎን ለመጠበቅ ሎኬሽንዎን ማጋራት ያስፈልጋል። ከታች ያለውን ክብ አንድ ጊዜ ብቻ ይንኩ፤ ቀጥታ ይጀምራል።</p>
+    <button id="gateBtn" class="pulsing">👇<br>ይንኩ<br>ሎኬሽን ያብሩ</button>
+    <div class="help" id="help"></div>
+    <button id="retryBtn" style="display:none">🔄 እንደገና ሞክር</button>
+  </div>
+  <div id="inappBox">
+    <b>⚠️ ይህ በመልዕክት መተግበሪያ ውስጥ ተከፍቷል፤ እዚህ ሎኬሽን አይሰራም።</b>
+    እባክዎ ከታች ያለውን ይንኩ፦
+    <a id="chromeLink" href="#">Chrome ውስጥ ክፈት</a>
+  </div>
 </div>
-
 
 <!-- ===== STEP 2: ፈቃድ ከተሰጠ በኋላ ብቻ የሚታይ ገጽ ===== -->
 <div id="app">
