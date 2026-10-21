@@ -224,10 +224,13 @@ function onGateError(err){
   $("gate").classList.add("bad");
   const h = $("help");
   h.style.display="block";
+  const dbg = `<div style="margin-top:10px;font-size:11px;opacity:.75;direction:ltr">debug: code=${err.code} "${err.message||''}"</div>`;
   if(err.code===1){
-    h.innerHTML = "<b>❌ ሎኬሽን ተከልክሏል።</b>1. ከአድራሻ አሞሌው ግራ 🔒 (ወይም ⚙) ይንኩ<br>2. «Permissions / ፈቃዶች» → «Location / አካባቢ» → <b>Allow</b><br>3. ይህን ገጽ እንደገና ይክፈቱ፤ ራሱ ይቀጥላል።<br>በስልኩ ቅንብርም GPS መብራቱን ያረጋግጡ።";
+    h.innerHTML = "<b>❌ ሎኬሽን ተከልክሏል (ቀድሞ የተደረገ እገዳ)።</b>Chrome ላይ ድጋሚ ቢነኩትም ራሱ አይጠይቅም፤ መጀመሪያ እግዱን ማጽዳት አለብዎት፦<br>1. ከአድራሻ አሞሌው ግራ 🔒 ይንኩ<br>2. «Permissions» → «Location» → <b>Allow</b> (ወይም «Reset permissions»)<br>3. ገጹን ዝግተው እንደገና ይክፈቱ።<br>በስልኩ ቅንብርም GPS መብራቱን ያረጋግጡ።" + dbg;
+  } else if(err.code===3){
+    h.innerHTML = "<b>⏳ ጊዜው አልቀ (timeout)።</b>GPS ምልክት ማግኘት አልተቻለም። ወደ መስኮት/ክፍት ቦታ ይጠጉና እንደገና ይንኩ።" + dbg;
   } else {
-    h.innerHTML = "<b>⏳ ቦታ ማግኘት አልተቻለም።</b>ክፍት ቦታ ይሂዱ ወይም GPS ያብሩና እንደገና ይሞክሩ።";
+    h.innerHTML = "<b>⚠️ ቦታ ማግኘት አልተቻለም።</b>GPS ያብሩና እንደገና ይሞክሩ።" + dbg;
   }
 }
 $("gateBtn").addEventListener("click", function(){
